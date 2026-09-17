@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+
+{% block title %}Центр уведомлений | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: -0.025em;
+    }
+
+    .page-header h1 svg {
+        width: 22px;
+        height: 22px;
+        stroke: var(--primary);
+    }
+
+    .page-header p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .alert-success {
+        background: var(--success-muted);
+        color: var(--success);
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(31, 107, 74, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        padding: 1.15rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin: 0 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.55rem;
+    }
+
+    .card-title svg {
+        width: 16px;
+        height: 16px;
+        stroke: var(--primary);
+        flex-shrink: 0;
+    }
+
+    .notification-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        background: var(--paper-100);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.9rem;
+        margin-bottom: 0.65rem;
+        transition: background var(--ease), border-color var(--ease);
+    }
+
+    [data-theme="dark"] .notification-item {
+        background: var(--bg-elevated);
+    }
+
+    .notification-item:hover {
+        border-color: var(--border-strong);
+        background: var(--primary-muted);
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .notification-time {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: var(--bg-card);
+        padding: 0.15rem 0.45rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .notification-message {
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        line-height: 1.4;
+        margin-bottom: 0.45rem;
+    }
+
+    .notification-type {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: var(--bg-card);
+        padding: 0.15rem 0.45rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        font-family: inherit;
+        border-radius: var(--radius-sm);
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background var(--ease), border-color var(--ease);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+    .btn-outline-sm {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+        padding: 0.4rem 0.85rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        font-family: inherit;
+        color: var(--text-secondary);
+    }
+
+    .btn-outline-sm:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 560;
+        border: 1px solid transparent;
+    }
+
+    .badge-pending {
+        background: var(--paper-100);
+        color: var(--steel-600);
+        border-color: var(--border);
+    }
+
+    .badge-completed {
+        background: var(--success-muted);
+        color: var(--success);
+        border-color: rgba(31, 107, 74, 0.2);
+    }
+
+    .badge-expired {
+        background: var(--danger-muted);
+        color: var(--danger);
+        border-color: rgba(155, 44, 44, 0.22);
+    }
+
+    .badge-progress {
+        background: var(--primary-muted);
+        color: var(--primary);
+        border-color: rgba(20, 61, 102, 0.18);
+    }
+
+    .deadline-urgent {
+        color: var(--danger);
+        font-weight: 560;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .schedule-info {
+        margin-top: 0;
+        padding: 0.9rem;
+        background: var(--paper-100);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .schedule-info {
+        background: var(--bg-elevated);
+    }
+
+    .schedule-header {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.65rem;
+        padding-bottom: 0.45rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .schedule-header svg {
+        width: 14px;
+        height: 14px;
+        stroke: var(--primary);
+    }
+
+    .schedule-header span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .schedule-times {
+        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .next-run {
+        margin-top: 0.45rem;
+        font-size: 0.7rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--paper-100);
+        border-bottom: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .data-table th {
+        background: var(--bg-elevated);
+    }
+
+    .data-table td {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--primary-muted);
+    }
+
+    .btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.65rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+    }
+
+    .btn-view:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state svg {
+        width: 40px;
+        height: 40px;
+        stroke: var(--text-muted);
+        opacity: 0.4;
+        margin-bottom: 0.65rem;
+    }
+
+    .mono-num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 768px) {
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem;
+        }
+
+        .hide-mobile {
+            display: none;
+        }
+
+        .notification-header {
+            flex-direction: column;
+        }
+
+        .btn-sm {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Центр уведомлений
+        </h1>
+        <p>Управление оповещениями и контроль исполнения</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="/notifications/check?urgent=1" class="btn-outline-sm" style="text-decoration: none;">Только срочные</a>
+        <a href="/notifications/check" class="btn-outline-sm" style="text-decoration: none;">Все</a>
+        <form action="/notifications/mark-all-read" method="POST" style="margin: 0;">
+            <button type="submit" class="btn-primary btn-sm">Отметить все прочитанными</button>
+        </form>
+    </div>
+</div>
+
+<!-- Непрочитанные уведомления -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        Новые уведомления
+    </div>
+
+    {% if unread_notifications %}
+    <div style="margin-bottom: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button onclick="markAllRead()" class="btn-primary btn-sm">
+            Отметить все как прочитанные
+        </button>
+    </div>
+
+    <div class="notification-list">
+        {% for notification in unread_notifications %}
+        <div class="notification-item">
+            <div class="notification-header">
+                <div class="notification-time">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    {{ notification.sent_at.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+                <div class="notification-type">
+                    {{ notification.notification_type }}
+                </div>
+            </div>
+            <div class="notification-message">{{ notification.message }}</div>
+            {% if notification.correspondence_id %}
+            <div style="margin-bottom: 0.5rem;">
+                <a href="/api/correspondences/{{ notification.correspondence_id }}" class="btn-view">
+                    Открыть документ
+                </a>
+            </div>
+            {% endif %}
+            <div style="margin-top: 0.75rem;">
+                <button onclick="markRead({{ notification.id }})" class="btn-outline-sm">
+                    Отметить как прочитанное
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        <p>Нет непрочитанных уведомлений</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Письма с приближающимся сроком -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Контроль сроков исполнения
+    </div>
+
+    {% if near_deadline_correspondences %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Вх. номер</th>
+                    <th>Отправитель</th>
+                    <th class="hide-mobile">Содержание</th>
+                    <th>Срок</th>
+                    <th>Осталось</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for corr in near_deadline_correspondences %}
+                <tr>
+                    <td><span class="mono-num" style="font-weight: 600;">{{ corr.incoming_number }}</span></td>
+                    <td>{{ corr.sender[:25] }}{% if corr.sender|length > 25 %}…{% endif %}</td>
+                    <td class="hide-mobile">{{ corr.content[:35] }}{% if corr.content|length > 35 %}…{% endif %}</td>
+                    <td class="deadline-urgent">{{ corr.deadline.strftime('%d.%m.%Y') }}</td>
+                    <td class="deadline-urgent">{{ (corr.deadline - today).days }} дн.</td>
+                    <td>
+                        <span class="badge-status
+                            {% if corr.status.value == 'Исполнено' %}badge-completed
+                            {% elif corr.status.value == 'Просрочено' %}badge-expired
+                            {% elif corr.status.value == 'В работе' %}badge-progress
+                            {% else %}badge-pending{% endif %}">
+                            {{ corr.status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/api/correspondences/{{ corr.id }}" class="btn-view">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Открыть
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <p>Нет документов с приближающимся сроком исполнения</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Сервис оповещений -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Сервис оповещений
+    </div>
+
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+        Уведомления отправляются автоматически планировщиком по расписанию.
+        Открытие этой страницы не инициирует рассылку.
+    </p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+        <button onclick="triggerCheck()" class="btn-primary btn-sm">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 0.25rem;">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Запустить проверку вручную
+        </button>
+
+        <div class="schedule-info">
+            <div class="schedule-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Расписание автоматических проверок</span>
+            </div>
+            <div class="schedule-times">
+                Ежедневно: <strong>09:00, 12:00, 16:00</strong>
+            </div>
+            {% if next_run is defined and next_run %}
+            <div class="next-run">
+                Следующая отправка: <strong>{{ next_run }}</strong>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+async function markRead(notificationId) {
+    try {
+        const response = await fetch(`/notifications/${notificationId}/mark-read`, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Ошибка при отметке уведомления');
+        }
+    } catch (e) {
+        console.error('Ошибка:', e);
+        alert('Ошибка соединения');
+    }
+}
+
+async function markAllRead() {
+    if (!confirm('Отметить все уведомления как прочитанные?')) return;
+    try {
+        const response = await fetch('/notifications/mark-all-read', {
+            method: 'POST'
+        });
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Ошибка при отметке уведомлений');
+        }
+    } catch (e) {
+        console.error('Ошибка:', e);
+        alert('Ошибка соединения');
+    }
+}
+
+async function triggerCheck() {
+    try {
+        const response = await fetch('/notifications/trigger-check', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.notified_count !== undefined) {
+            alert(`Проверка завершена. Отправлено уведомлений: ${data.notified_count}`);
+        } else {
+            alert('Проверка выполнена успешно');
+        }
+        location.reload();
+    } catch (e) {
+        console.error('Ошибка:', e);
+        alert('Ошибка при проверке уведомлений');
+    }
+}
+</script>
+{% endblock %}

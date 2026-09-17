@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block title %}Обзор | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    .dash-hero h1 {
+        margin: 0 0 0.3rem;
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+    }
+    .dash-hero p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+    .dash-hero-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .load-banner {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.1rem;
+        margin-bottom: 1.15rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .load-banner strong { font-weight: 700; }
+    .load-banner .load-hot { color: var(--warning); font-weight: 700; }
+
+    .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    .kpi {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.95rem 1.05rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    .kpi-value {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-primary);
+    }
+    .kpi-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .kpi.is-warn .kpi-value { color: var(--warning); }
+    .kpi.is-ok .kpi-value { color: var(--success); }
+
+    .dash-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.9fr);
+        gap: 1.15rem;
+        align-items: start;
+    }
+
+    .panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+    .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.85rem 1.1rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, #fafbfc 0%, var(--bg-card) 100%);
+    }
+    [data-theme="dark"] .panel-head { background: var(--bg-card); }
+    .panel-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+    .panel-head a, .panel-head .count {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-muted);
+    }
+
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.84rem; }
+    .deadline-hot { color: var(--warning); font-weight: 600; }
+
+    .btn-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-sm:hover { background: var(--primary-bg); color: var(--primary); border-color: rgba(26,76,140,0.25); }
+    .btn-sm-primary {
+        background: var(--primary);
+        color: #fff !important;
+        border-color: var(--primary);
+    }
+    .btn-sm-primary:hover { background: var(--primary-dark); color: #fff !important; }
+
+    .plan-section { border-bottom: 1px solid var(--border); }
+    .plan-section:last-child { border-bottom: none; }
+    .plan-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.65rem 1.05rem;
+        background: var(--bg-main);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+    }
+    .plan-item {
+        padding: 0.75rem 1.05rem;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem 0.75rem;
+        align-items: start;
+    }
+    .plan-section .plan-item:last-child { border-bottom: none; }
+    .plan-item:hover { background: var(--primary-bg); }
+    .plan-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+    .plan-title:hover { color: var(--primary); }
+    .plan-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .plan-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        align-items: flex-end;
+    }
+    .plan-note-form { grid-column: 1 / -1; margin-top: 0.15rem; }
+    .plan-note-input {
+        width: 100%;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        font-size: 0.8rem;
+        padding: 0.4rem 0.55rem;
+        resize: vertical;
+        min-height: 2rem;
+    }
+    .plan-note-input:focus {
+        outline: none;
+        border-style: solid;
+        border-color: rgba(26,76,140,0.35);
+        background: var(--bg-card);
+    }
+    .plan-note-hint {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+
+    .stage-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.12rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    .stage-early { background: #e2e8f0; color: #475569; }
+    .stage-start { background: #dbeafe; color: #1d4ed8; }
+    .stage-critical { background: #fef3c7; color: #b45309; }
+    .stage-overdue { background: #fee2e2; color: #b91c1c; }
+    .stage-waiting { background: #f3e8ff; color: #7c3aed; }
+    .stage-done { background: #d1fae5; color: #047857; }
+
+    .recommend-list { list-style: none; margin: 0; padding: 0; }
+    .recommend-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.05rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.85rem;
+    }
+    .recommend-item:last-child { border-bottom: none; }
+    .recommend-num {
+        font-weight: 700;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        margin-right: 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    .empty-soft {
+        padding: 1.75rem 1.2rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 960px) {
+        .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+        .dash-grid { grid-template-columns: 1fr; }
+        .dash-hero { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-hero">
+    <div>
+        <h1>Здравствуйте, {{ current_user.full_name.split()[0] }}</h1>
+        <p>План на день{% if today %} · {{ today.strftime('%d.%m.%Y') }}{% endif %}</p>
+    </div>
+    <div class="dash-hero-actions">
+        <a href="/api/correspondences/" class="btn-sm">Все письма</a>
+        <a href="/api/correspondences/create" class="btn-sm btn-sm-primary">+ Новое</a>
+    </div>
+</div>
+
+{% if work_plan is defined %}
+<div class="load-banner">
+    <div>
+        <strong>{{ work_plan.load_summary }}</strong>
+        {% if work_plan.load_hot > 0 %}
+        <span class="load-hot"> · сначала горящие</span>
+        {% endif %}
+    </div>
+    <a href="#recommended" class="btn-sm">Рекомендуемый порядок</a>
+</div>
+{% endif %}
+
+<div class="kpi-strip">
+    <div class="kpi">
+        <div class="kpi-value">{% if work_plan is defined %}{{ work_plan.load_total }}{% else %}{{ stats.pending_count + stats.in_progress_count }}{% endif %}</div>
+        <div class="kpi-label">В личной нагрузке</div>
+    </div>
+    <div class="kpi is-warn">
+        <div class="kpi-value">{% if work_plan is defined %}{{ work_plan.load_hot }}{% else %}{{ stats.near_deadline_count }}{% endif %}</div>
+        <div class="kpi-label">Горящие</div>
+    </div>
+    <div class="kpi is-ok">
+        <div class="kpi-value">{{ stats.completed_count }}</div>
+        <div class="kpi-label">Исполнено</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-value">{{ stats.near_deadline_count }}</div>
+        <div class="kpi-label">Близкий срок</div>
+    </div>
+</div>
+
+<div class="dash-grid" id="work-plan">
+    <div class="dash-main">
+        <div class="panel" style="margin-bottom: 1.15rem;">
+            <div class="panel-head">
+                <h2>План дня</h2>
+                <span class="count">
+                    {% if work_plan is defined %}
+                    {{ work_plan.today|length + work_plan.week|length + work_plan.waiting|length + work_plan.unaccepted|length }}
+                    {% endif %}
+                </span>
+            </div>
+
+            {% macro plan_bucket(title, items, empty_text) %}
+            <div class="plan-section">
+                <div class="plan-section-head">
+                    <span>{{ title }}</span>
+                    <span>{{ items|length }}</span>
+                </div>
+                {% if items %}
+                    {% for item in items %}
+                    <div class="plan-item">
+                        <div>
+                            <a class="plan-title" href="{{ item.link }}">№{{ item.incoming_number }}</a>
+                            <div class="plan-meta">
+                                <span class="stage-pill stage-{{ item.stage }}">{{ item.stage_label }}</span>
+                                {% if item.deadline %}
+                                <span class="mono {% if item.stage in ['critical','overdue'] %}deadline-hot{% endif %}">
+                                    {{ item.deadline.strftime('%d.%m.%Y') }}
+                                </span>
+                                {% endif %}
+                                <span>{{ item.sender[:40] }}{% if item.sender|length > 40 %}…{% endif %}</span>
+                            </div>
+                        </div>
+                        <div class="plan-actions">
+                            {% if item.can_take and current_user.role != 'viewer' %}
+                            <form method="POST" action="/api/correspondences/{{ item.id }}/take-in-work">
+                                <button type="submit" class="btn-sm btn-sm-primary">Взять в работу</button>
+                            </form>
+                            {% endif %}
+                            <a class="btn-sm" href="{{ item.link }}">Открыть</a>
+                        </div>
+                        <form class="plan-note-form" method="POST" action="/dashboard/plan-note/{{ item.id }}">
+                            <input
+                                class="plan-note-input"
+                                type="text"
+                                name="note_text"
+                                value="{{ item.note }}"
+                                placeholder="Заметка к задаче…"
+                                maxlength="500"
+                                onchange="this.form.submit()"
+                            >
+                            <div class="plan-note-hint">Enter / уход с поля — сохранить заметку</div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-soft" style="padding: 1rem;">{{ empty_text }}</div>
+                {% endif %}
+            </div>
+            {% endmacro %}
+
+            {% if work_plan is defined %}
+            {{ plan_bucket('Сделать сегодня', work_plan.today, 'На сегодня срочных писем нет') }}
+            {{ plan_bucket('На этой неделе', work_plan.week, 'На этой неделе пусто') }}
+            {{ plan_bucket('Жду ответа', work_plan.waiting, 'Нет писем в ожидании внешнего ответа') }}
+            {{ plan_bucket('Передано мне — не принято', work_plan.unaccepted, 'Нет непринятых передач') }}
+            {% else %}
+            <div class="empty-soft">План дня пока недоступен.</div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Недавние документы</h2>
+                <a href="/api/correspondences/">Реестр</a>
+            </div>
+            {% if recent_correspondences %}
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Номер</th>
+                            <th>Дата</th>
+                            <th>Отправитель</th>
+                            <th>Статус</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for corr in recent_correspondences %}
+                        <tr>
+                            <td class="mono" style="font-weight: 600;">{{ corr.incoming_number }}</td>
+                            <td class="mono">{{ corr.received_date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ corr.sender[:32] }}{% if corr.sender|length > 32 %}…{% endif %}</td>
+                            <td>
+                                <span class="badge
+                                    {% if corr.status.value == 'Исполнено' %}badge-completed
+                                    {% elif corr.status.value == 'Просрочено' %}badge-expired
+                                    {% elif corr.status.value == 'В работе' %}badge-progress
+                                    {% else %}badge-pending{% endif %}">
+                                    {{ corr.status.value }}
+                                </span>
+                                {% if corr.waiting_external %}
+                                <span class="stage-pill stage-waiting" style="margin-left: 0.25rem;">Жду ответа</span>
+                                {% endif %}
+                            </td>
+                            <td><a class="btn-sm" href="/api/correspondences/{{ corr.id }}">Открыть</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-soft">
+                Документов пока нет.
+                <div style="margin-top: 0.75rem;">
+                    <a href="/api/correspondences/create" class="btn-sm btn-sm-primary">Создать первое письмо</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <aside class="dash-aside">
+        <div class="panel" style="margin-bottom: 1.15rem;" id="recommended">
+            <div class="panel-head">
+                <h2>Рекомендуемый порядок</h2>
+            </div>
+            {% if work_plan is defined and work_plan.recommended %}
+            <ol class="recommend-list">
+                {% for item in work_plan.recommended %}
+                <li class="recommend-item">
+                    <div>
+                        <span class="recommend-num">{{ loop.index }}.</span>
+                        <a class="plan-title" href="{{ item.link }}">№{{ item.incoming_number }}</a>
+                        <div class="plan-meta">
+                            <span class="stage-pill stage-{{ item.stage }}">{{ item.stage_label }}</span>
+                            {% if item.deadline %}<span class="mono">{{ item.deadline.strftime('%d.%m.%Y') }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% if item.can_take and current_user.role != 'viewer' %}
+                    <form method="POST" action="/api/correspondences/{{ item.id }}/take-in-work">
+                        <button type="submit" class="btn-sm btn-sm-primary">В работу</button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <div class="empty-soft">Нечего ранжировать — нагрузка пуста.</div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><h2>Быстрые действия</h2></div>
+            <div style="padding: 0.85rem 1.05rem 1.1rem; display: grid; gap: 0.5rem;">
+                <a class="btn-sm" href="/api/correspondences/create" style="justify-content: center;">Зарегистрировать письмо</a>
+                <a class="btn-sm" href="/api/correspondences/?urgent=1" style="justify-content: center;">Только срочные</a>
+                <a class="btn-sm" href="/notifications/check" style="justify-content: center;">Центр уведомлений</a>
+                <a class="btn-sm" href="/profile/" style="justify-content: center;">Панель успеха</a>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

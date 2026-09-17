@@ -1,0 +1,47 @@
+# Secrets & local config
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+.update_meta.json
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# App data
+*.db
+*.db-journal
+correspondences.db
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+app/static/avatars/*
+!app/static/avatars/.gitkeep
+release/NeTvoyoDelo-Local/app/static/uploads/*
+!release/NeTvoyoDelo-Local/app/static/uploads/.gitkeep
+release/NeTvoyoDelo-Local/app/static/avatars/*
+!release/NeTvoyoDelo-Local/app/static/avatars/.gitkeep
+release/NeTvoyoDelo-Local/correspondences.db
+release/NeTvoyoDelo-Local/.env
+
+# Build cache / archives (zip can be attached as GitHub Release)
+release/.cache/
+release/*.zip
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёты | NeTvoyoDelo Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { margin-bottom: 1.75rem; }
+    .page-header h1 {
+        font-size: 1.35rem; font-weight: 600; color: var(--text-primary);
+        margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .page-header h1 svg { width: 28px; height: 28px; stroke: var(--primary); }
+    .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+    .page-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+    .stats-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+        background: var(--bg-card); border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg); padding: 1.15rem; position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary);
+    }
+    .stat-card.accent-success::before { background: var(--success); }
+    .stat-card.accent-warning::before { background: var(--warning); }
+    .stat-card.accent-danger::before { background: var(--danger); }
+    .stat-number {
+        font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+        font-variant-numeric: tabular-nums; line-height: 1.15;
+    }
+    .stat-label {
+        font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.4px; color: var(--text-muted); margin-top: 0.35rem;
+    }
+    .stat-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+    .panels-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .panel {
+        background: var(--bg-card); border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;
+    }
+    .panels-row .panel { margin-bottom: 0; }
+    .panel-header {
+        padding: 1rem 1.25rem; background: var(--primary-bg);
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.3px; color: var(--text-primary);
+        display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+    }
+    .panel-header .meta { font-size: 0.7rem; font-weight: 500; text-transform: none; letter-spacing: normal; color: var(--text-muted); }
+
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+        text-align: left; padding: 0.75rem 1rem; font-size: 0.65rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        color: var(--text-muted); background: var(--primary-bg);
+        border-bottom: 1px solid var(--border-light);
+    }
+    .data-table td {
+        padding: 0.7rem 1rem; font-size: 0.85rem; color: var(--text-primary);
+        border-bottom: 1px solid var(--border-light); vertical-align: middle;
+    }
+    .data-table tbody tr:hover { background: var(--primary-bg); }
+    .num { font-variant-numeric: tabular-nums; font-family: var(--font-mono), monospace; font-size: 0.8rem; }
+    .pct-bar {
+        height: 6px; background: var(--border-light); border-radius: 3px;
+        overflow: hidden; min-width: 72px; max-width: 120px;
+    }
+    .pct-bar > span {
+        display: block; height: 100%; background: var(--primary); border-radius: 3px;
+    }
+    .pct-wrap { display: flex; align-items: center; gap: 0.5rem; }
+    .badge-warn {
+        display: inline-block; padding: 0.15rem 0.45rem; border-radius: 20px;
+        font-size: 0.7rem; font-weight: 600; background: rgba(245, 158, 11, 0.15); color: #b45309;
+    }
+    .badge-ok {
+        display: inline-block; padding: 0.15rem 0.45rem; border-radius: 20px;
+        font-size: 0.7rem; font-weight: 600; background: rgba(16, 185, 129, 0.12); color: #059669;
+    }
+    .badge-danger {
+        display: inline-block; padding: 0.15rem 0.45rem; border-radius: 20px;
+        font-size: 0.7rem; font-weight: 600; background: rgba(220, 38, 38, 0.1); color: #dc2626;
+    }
+    .user-link { color: var(--primary); text-decoration: none; font-weight: 500; }
+    .user-link:hover { text-decoration: underline; }
+    .btn-back {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.45rem 0.9rem; border: 1px solid var(--border-light);
+        border-radius: var(--radius-md); color: var(--text-secondary);
+        text-decoration: none; font-size: 0.8rem;
+    }
+    .btn-back:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+    .empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
+    .status-bars { padding: 1.15rem 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .status-row { display: grid; grid-template-columns: 140px 1fr 48px; gap: 0.75rem; align-items: center; }
+    .status-name { font-size: 0.8rem; color: var(--text-secondary); }
+    .status-track { height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden; }
+    .status-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+    .status-count { font-size: 0.8rem; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+    @media (max-width: 1000px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .panels-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .status-row { grid-template-columns: 1fr; gap: 0.25rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+        Отчёты
+    </h1>
+    <p>Сводная аналитика по документообороту</p>
+    {% if generated_at is defined and generated_at %}
+    <div class="page-meta">Сформировано: {{ generated_at.strftime('%d.%m.%Y %H:%M') }} UTC</div>
+    {% endif %}
+</div>
+
+{% set rs = report_stats|default({}) %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ rs.total|default(0) }}</div>
+        <div class="stat-label">Всего документов</div>
+        <div class="stat-hint">Единиц в реестре</div>
+    </div>
+    <div class="stat-card accent-success">
+        <div class="stat-number">{{ rs.completed|default(0) }}</div>
+        <div class="stat-label">Исполнено</div>
+        <div class="stat-hint">
+            {% if rs.on_time_pct is defined %}в срок: {{ rs.on_time_pct }}%{% else %}закрытых документов{% endif %}
+        </div>
+    </div>
+    <div class="stat-card accent-warning">
+        <div class="stat-number">{{ rs.in_progress|default(0) }}</div>
+        <div class="stat-label">В работе / ожидании</div>
+        <div class="stat-hint">Незакрытые документы</div>
+    </div>
+    <div class="stat-card accent-danger">
+        <div class="stat-number">{{ rs.past_deadline|default(rs.overdue|default(0)) }}</div>
+        <div class="stat-label">С истёкшим сроком</div>
+        <div class="stat-hint">Требуют внимания</div>
+    </div>
+</div>
+
+<div class="panels-row">
+    <div class="panel">
+        <div class="panel-header">
+            Ключевые показатели
+            <span class="meta">сводка</span>
+        </div>
+        {% if summary_rows is defined and summary_rows %}
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Показатель</th>
+                        <th>Значение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in summary_rows %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td class="num">{{ row.value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">Нет данных</div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            По статусам
+            <span class="meta">распределение</span>
+        </div>
+        {% if by_status is defined and by_status %}
+        {% set status_values = by_status|map(attribute='value')|list %}
+        {% set max_status = (status_values|max) if status_values else 1 %}
+        {% if max_status < 1 %}{% set max_status = 1 %}{% endif %}
+        <div class="status-bars">
+            {% for row in by_status %}
+            <div class="status-row">
+                <div class="status-name">{{ row.label }}</div>
+                <div class="status-track">
+                    <div class="status-fill" style="width: {{ ((row.value / max_status) * 100)|round(1) }}%;"></div>
+                </div>
+                <div class="status-count">{{ row.value }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">Нет документов</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        По отделам
+        <span class="meta">{% if by_department is defined %}{{ by_department|length }}{% else %}0{% endif %}</span>
+    </div>
+    {% if by_department is defined and by_department %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Отдел</th>
+                    <th>Всего</th>
+                    <th>Исполнено</th>
+                    <th>Открыто</th>
+                    <th>Просрочено</th>
+                    <th>Исполнение</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in by_department %}
+                <tr>
+                    <td>{{ row.department }}</td>
+                    <td class="num">{{ row.total }}</td>
+                    <td class="num">{{ row.completed }}</td>
+                    <td class="num">{{ row.open }}</td>
+                    <td class="num">
+                        {% if row.overdue > 0 %}
+                        <span class="badge-danger">{{ row.overdue }}</span>
+                        {% else %}
+                        <span class="badge-ok">0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="pct-wrap">
+                            <div class="pct-bar"><span style="width: {{ row.completion_pct }}%;"></span></div>
+                            <span class="num">{{ row.completion_pct }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">Отделы не найдены или документов пока нет</div>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        Нагрузка по сотрудникам
+        <span class="meta">{% if load_by_employee is defined %}{{ load_by_employee|length }}{% else %}0{% endif %} активных</span>
+    </div>
+    {% if load_by_employee is defined and load_by_employee %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Сотрудник</th>
+                    <th>Отдел</th>
+                    <th>Назначено</th>
+                    <th>Исполнено</th>
+                    <th>Открыто</th>
+                    <th>Просрочено</th>
+                    <th>Исполнение</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in load_by_employee %}
+                <tr>
+                    <td>
+                        {% if emp.id is defined %}
+                        <a class="user-link" href="/admin/users/{{ emp.id }}">{{ emp.full_name }}</a>
+                        {% else %}
+                        {{ emp.full_name }}
+                        {% endif %}
+                    </td>
+                    <td>{{ emp.department }}</td>
+                    <td class="num">{{ emp.assigned }}</td>
+                    <td class="num">{{ emp.completed }}</td>
+                    <td class="num">
+                        {% if emp.open > 0 %}
+                        <span class="badge-warn">{{ emp.open }}</span>
+                        {% else %}
+                        {{ emp.open }}
+                        {% endif %}
+                    </td>
+                    <td class="num">
+                        {% if emp.overdue > 0 %}
+                        <span class="badge-danger">{{ emp.overdue }}</span>
+                        {% else %}
+                        0
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="pct-wrap">
+                            <div class="pct-bar"><span style="width: {{ emp.completion_pct|default(0) }}%;"></span></div>
+                            <span class="num">{{ emp.completion_pct|default(0) }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">Нет активных сотрудников</div>
+    {% endif %}
+</div>
+
+<a href="/admin/" class="btn-back">← К админ-панели</a>
+{% endblock %}

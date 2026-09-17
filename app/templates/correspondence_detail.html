@@ -1,0 +1,913 @@
+{% extends "base.html" %}
+
+{% block title %}Документ №{{ correspondence.incoming_number }} | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-header {
+        padding: 1.15rem 1.35rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--paper-100);
+    }
+
+    [data-theme="dark"] .detail-header {
+        background: var(--bg-elevated);
+    }
+
+    .detail-header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: -0.025em;
+    }
+
+    .detail-header svg {
+        width: 22px;
+        height: 22px;
+        stroke: var(--primary);
+    }
+
+    .detail-header p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .detail-body {
+        padding: 1.35rem;
+    }
+
+    .info-section {
+        margin-bottom: 1.5rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .info-section h3 {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin: 0 0 0.85rem;
+        padding-bottom: 0.45rem;
+        border-bottom: 1px solid var(--border);
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.7rem 0.85rem;
+        background: var(--paper-100);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .info-item {
+        background: var(--bg-elevated);
+    }
+
+    .info-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    .mono-num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .deadline-warning {
+        color: var(--warning);
+        font-weight: 560;
+        margin-left: 0.5rem;
+    }
+
+    .deadline-expired {
+        color: var(--danger);
+        font-weight: 560;
+        margin-left: 0.5rem;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.72rem;
+        font-weight: 560;
+        border: 1px solid transparent;
+    }
+
+    .status-pending {
+        background: var(--paper-100);
+        color: var(--steel-600);
+        border-color: var(--border);
+    }
+
+    .status-progress {
+        background: var(--primary-muted);
+        color: var(--primary);
+        border-color: rgba(20, 61, 102, 0.18);
+    }
+
+    .status-completed {
+        background: var(--success-muted);
+        color: var(--success);
+        border-color: rgba(31, 107, 74, 0.2);
+    }
+
+    .status-expired {
+        background: var(--danger-muted);
+        color: var(--danger);
+        border-color: rgba(155, 44, 44, 0.22);
+    }
+
+    .status-transferred {
+        background: rgba(61, 90, 115, 0.1);
+        color: var(--steel-600);
+        border-color: rgba(61, 90, 115, 0.2);
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .history-table th {
+        padding: 0.65rem 0.9rem;
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--paper-100);
+        border-bottom: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .history-table th {
+        background: var(--bg-elevated);
+    }
+
+    .history-table td {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .history-table tbody tr:hover {
+        background: var(--primary-muted);
+    }
+
+    .transfer-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: flex-end;
+        background: var(--paper-100);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-top: 0.5rem;
+        border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .transfer-form {
+        background: var(--bg-elevated);
+    }
+
+    .transfer-group {
+        flex: 2;
+        min-width: 180px;
+    }
+
+    .transfer-group label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .transfer-select,
+    .transfer-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        font-family: inherit;
+        transition: border-color var(--ease), box-shadow var(--ease);
+    }
+
+    .transfer-select:focus,
+    .transfer-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 1.35rem;
+        padding-top: 1.35rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: inherit;
+        text-decoration: none;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .btn-edit {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .btn-edit:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+        color: #fff;
+    }
+
+    .btn-transfer {
+        background: var(--ink-800);
+        color: #fff;
+        border-color: var(--ink-800);
+    }
+
+    .btn-transfer:hover {
+        background: var(--ink-950);
+        border-color: var(--ink-950);
+        color: #fff;
+    }
+
+    .btn-delete {
+        background: transparent;
+        border-color: rgba(155, 44, 44, 0.35);
+        color: var(--danger);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger-muted);
+        color: var(--danger);
+    }
+
+    .btn-back {
+        background: transparent;
+        border-color: var(--border);
+        color: var(--text-secondary);
+    }
+
+    .btn-back:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border-left: 2px solid var(--border);
+    }
+
+    .timeline-item {
+        position: relative;
+        padding: 0 0 1.15rem 1.15rem;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: 0.35rem;
+        width: 8px;
+        height: 8px;
+        border-radius: var(--radius-sm);
+        background: var(--primary);
+    }
+
+    .timeline-meta {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .timeline-action {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .timeline-note {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .timeline-diff {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.35rem;
+        font-family: var(--font-mono);
+    }
+
+    .attachment-list {
+        list-style: none;
+        margin: 0 0 1rem;
+        padding: 0;
+    }
+
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.6rem 0.85rem;
+        background: var(--paper-100);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    [data-theme="dark"] .attachment-item {
+        background: var(--bg-elevated);
+    }
+
+    .upload-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: flex-end;
+        background: var(--paper-100);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .upload-form {
+        background: var(--bg-elevated);
+    }
+
+    .completion-note-box {
+        padding: 0.85rem 1rem;
+        background: var(--paper-100);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        line-height: 1.45;
+        white-space: pre-wrap;
+    }
+
+    [data-theme="dark"] .completion-note-box {
+        background: var(--bg-elevated);
+    }
+
+    @media (max-width: 768px) {
+        .detail-header {
+            padding: 1rem;
+        }
+
+        .detail-body {
+            padding: 1rem;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+
+        .transfer-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .transfer-group {
+            width: 100%;
+        }
+
+        .action-buttons {
+            justify-content: flex-start;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if just_completed and completion_reward %}
+<div class="completion-reward">
+    <span aria-hidden="true">✓</span>
+    <span>{{ completion_reward }}</span>
+</div>
+{% endif %}
+<div class="detail-card">
+    <div class="detail-header">
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M4 4h16v16H4z"/>
+                <path d="M8 8h8M8 12h6M8 16h4"/>
+            </svg>
+            Документ №<span class="mono-num">{{ correspondence.incoming_number }}</span>
+        </h1>
+        <p>Полная информация о документе</p>
+    </div>
+    
+    <div class="detail-body">
+        <!-- Основная информация -->
+        <div class="info-section">
+            <h3>Основные сведения</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Входящий номер</div>
+                    <div class="info-value mono-num">{{ correspondence.incoming_number }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата документа</div>
+                    <div class="info-value mono-num">{{ correspondence.incoming_date.strftime('%d.%m.%Y') }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата поступления</div>
+                    <div class="info-value mono-num">{{ correspondence.received_date.strftime('%d.%m.%Y') }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Отправитель</div>
+                    <div class="info-value">{{ correspondence.sender }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Содержание</div>
+                    <div class="info-value">{{ correspondence.content }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Срок исполнения</div>
+                    <div class="info-value">
+                        <span class="mono-num">{{ correspondence.deadline.strftime('%d.%m.%Y') }}</span>
+                        {% if deadline_stage is defined and deadline_stage and deadline_stage != 'done' %}
+                        <span class="deadline-stage deadline-stage-{{ deadline_stage }}" style="margin-left: 0.4rem;">
+                            {{ deadline_stage_labels.get(deadline_stage, deadline_stage) if deadline_stage_labels is defined else deadline_stage }}
+                        </span>
+                        {% endif %}
+                        {% if deadline_stage_hint %}
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; font-weight: 500;">
+                            {{ deadline_stage_hint }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Жду внешнего ответа</div>
+                    <div class="info-value">
+                        {% if correspondence.waiting_external %}
+                        <span class="deadline-stage deadline-stage-waiting">Да</span>
+                        {% if correspondence.waiting_external_note %}
+                        <div style="margin-top: 0.35rem; font-size: 0.85rem;">{{ correspondence.waiting_external_note }}</div>
+                        {% endif %}
+                        {% else %}
+                        Нет
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ответственный</div>
+                    <div class="info-value">
+                        {% if correspondence.executor %}
+                            {{ correspondence.executor.full_name }}
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">({{ correspondence.executor.department }})</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">Не назначен</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Статус</div>
+                    <div class="info-value">
+                        <span class="status-badge-large 
+                            {% if correspondence.status.value == 'Исполнено' %}status-completed
+                            {% elif correspondence.status.value == 'Просрочено' %}status-expired
+                            {% elif correspondence.status.value == 'В работе' %}status-progress
+                            {% elif correspondence.status.value == 'Передано' %}status-transferred
+                            {% else %}status-pending{% endif %}">
+                            {{ correspondence.status.value }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Дополнительная информация -->
+        <div class="info-section">
+            <h3>Дополнительные данные</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Исходящая информация</div>
+                    <div class="info-value">{{ correspondence.sent_info or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Адресат</div>
+                    <div class="info-value">{{ correspondence.to_whom or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Контроль исполнения</div>
+                    <div class="info-value">{{ correspondence.control or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Результат исполнения</div>
+                    <div class="info-value">{{ correspondence.report or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата отчета</div>
+                    <div class="info-value">{{ correspondence.report_date.strftime('%d.%m.%Y') if correspondence.report_date else '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Автор записи</div>
+                    <div class="info-value">{{ correspondence.created_by.full_name if correspondence.created_by else '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Создано</div>
+                    <div class="info-value">{{ correspondence.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Обновлено</div>
+                    <div class="info-value">{{ correspondence.updated_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+                {% if correspondence.completed_at %}
+                <div class="info-item">
+                    <div class="info-label">Выполнено</div>
+                    <div class="info-value">{{ correspondence.completed_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Примечание об исполнении -->
+        {% if correspondence.completion_note or correspondence.status.value == 'Исполнено' %}
+        <div class="info-section">
+            <h3>Примечание об исполнении</h3>
+            {% if correspondence.completion_note %}
+            <div class="completion-note-box">{{ correspondence.completion_note }}</div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Примечание не указано</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Связи с другими документами -->
+        <div class="info-section">
+            <h3>Связи документов</h3>
+            {% set out_links = outgoing_links if outgoing_links is defined else [] %}
+            {% set in_links = incoming_links if incoming_links is defined else [] %}
+
+            {% if out_links or in_links %}
+            <ul class="attachment-list" style="margin-bottom: 1rem;">
+                {% for link in out_links %}
+                <li class="attachment-item">
+                    <span>
+                        <strong style="color: var(--primary);">{{ link_types.get(link.link_type, link.link_type) if link_types is defined else link.link_type }}</strong>
+                        {% if link.target %}
+                        → <a href="/api/correspondences/{{ link.target.id }}">№ {{ link.target.incoming_number }}</a>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;"> · {{ link.target.sender }} · {{ link.target.status.value if link.target.status else '' }}</span>
+                        {% else %}
+                        → внешний № {{ link.external_number }}
+                        {% if link.external_sender %}<span style="color: var(--text-muted); font-size: 0.75rem;"> · {{ link.external_sender }}</span>{% endif %}
+                        {% if link.external_date %}<span style="color: var(--text-muted); font-size: 0.75rem;"> · {{ link.external_date.strftime('%d.%m.%Y') }}</span>{% endif %}
+                        {% endif %}
+                        {% if link.note %}<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">{{ link.note }}</div>{% endif %}
+                    </span>
+                    {% if current_user.role != 'viewer' or current_user.is_admin %}
+                    <form action="/api/correspondences/{{ correspondence.id }}/links/{{ link.id }}/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Удалить связь?');">
+                        <button type="submit" class="btn-action btn-delete" style="padding: 0.35rem 0.75rem; font-size: 0.7rem;">Удалить</button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+                {% for link in in_links %}
+                <li class="attachment-item">
+                    <span>
+                        <strong style="color: var(--text-muted);">Входящая связь</strong>
+                        ← <a href="/api/correspondences/{{ link.source_id }}">письмо #{{ link.source_id }}</a>
+                        {% if link.source %}
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">№ {{ link.source.incoming_number }} · {{ link_types.get(link.link_type, link.link_type) if link_types is defined else link.link_type }}</span>
+                        {% endif %}
+                    </span>
+                    <a href="/api/correspondences/{{ link.source_id }}" class="btn-action btn-back" style="padding: 0.35rem 0.75rem; font-size: 0.7rem;">Открыть</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Связанных документов пока нет</p>
+            {% endif %}
+
+            <div style="margin-bottom: 0.75rem;">
+                <a href="/api/correspondences/links?focus={{ correspondence.id }}" style="font-size: 0.8rem;">Открыть на карте связей →</a>
+            </div>
+
+            {% if current_user.role != 'viewer' or current_user.is_admin %}
+            <form action="/api/correspondences/{{ correspondence.id }}/links" method="POST" style="padding: 1rem; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 0.65rem;">Добавить связь</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;">
+                        <input type="radio" name="link_mode" value="platform" checked onchange="toggleDetailLinkMode()"> На платформе
+                    </label>
+                    <label style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer;">
+                        <input type="radio" name="link_mode" value="external" onchange="toggleDetailLinkMode()"> Внешние реквизиты
+                    </label>
+                </div>
+                <div id="detailLinkPlatform" style="margin-bottom: 0.65rem;">
+                    <select name="linked_correspondence_id" class="form-control" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                        <option value="">Выберите документ…</option>
+                        {% for opt in link_options|default([]) %}
+                        <option value="{{ opt.id }}">№ {{ opt.incoming_number }} — {{ opt.sender }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="detailLinkExternal" style="display: none; margin-bottom: 0.65rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <input type="text" name="external_number" placeholder="Номер" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                        <input type="date" name="external_date" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                        <input type="text" name="external_sender" placeholder="Отправитель" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                        <input type="text" name="external_note" placeholder="Примечание" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <select name="link_type" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                        {% for key, label in (link_types or {}).items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="link_note" placeholder="Комментарий к связи" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                <button type="submit" class="btn-action" style="padding: 0.45rem 1rem; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">Добавить связь</button>
+            </form>
+            <script>
+            function toggleDetailLinkMode() {
+                const mode = document.querySelector('input[name="link_mode"]:checked')?.value;
+                document.getElementById('detailLinkPlatform').style.display = mode === 'platform' ? 'block' : 'none';
+                document.getElementById('detailLinkExternal').style.display = mode === 'external' ? 'block' : 'none';
+            }
+            </script>
+            {% endif %}
+        </div>
+
+        <!-- Вложения -->
+        {% set attach_list = attachments if attachments is defined else correspondence.attachments %}
+        <div class="info-section">
+            <h3>Вложения</h3>
+            {% if attach_list %}
+            <ul class="attachment-list">
+                {% for att in attach_list %}
+                <li class="attachment-item">
+                    <span>
+                        <strong>{{ att.filename }}</strong>
+                        {% if att.size_bytes %}
+                        <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: 0.5rem;">
+                            {{ (att.size_bytes / 1024)|round(1) }} КБ
+                        </span>
+                        {% endif %}
+                        {% if att.uploaded_at %}
+                        <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: 0.5rem;">
+                            {{ att.uploaded_at.strftime('%d.%m.%Y %H:%M') }}
+                        </span>
+                        {% endif %}
+                    </span>
+                    <span style="display: flex; gap: 0.35rem; align-items: center;">
+                        <a href="/api/correspondences/{{ correspondence.id }}/attachments/{{ att.id }}/download" class="btn-action btn-back" style="padding: 0.35rem 0.75rem; font-size: 0.7rem;">Скачать</a>
+                        {% if current_user.is_admin or att.uploaded_by_id == current_user.id %}
+                        <form action="/api/correspondences/{{ correspondence.id }}/attachments/{{ att.id }}/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Удалить вложение?');">
+                            <button type="submit" class="btn-action btn-delete" style="padding: 0.35rem 0.75rem; font-size: 0.7rem;">Удалить</button>
+                        </form>
+                        {% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">Вложений пока нет</p>
+            {% endif %}
+            <form action="/api/correspondences/{{ correspondence.id }}/attachments" method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="transfer-group" style="flex: 2;">
+                    <label for="attachment_file">Файл</label>
+                    <input type="file" id="attachment_file" name="file" class="transfer-input" required>
+                </div>
+                <div class="transfer-group" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-action btn-edit">Загрузить</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- История передач -->
+        {% if transfers %}
+        <div class="info-section">
+            <h3>История передачи</h3>
+            <div style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Передал</th>
+                            <th>Получатель</th>
+                            <th>Дата</th>
+                            <th>Примечание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transfer in transfers %}
+                        <tr>
+                            <td>{{ transfer.transferred_by.full_name }}</td>
+                            <td>{{ transfer.transferred_to.full_name }}</td>
+                            <td>{{ transfer.transfer_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ transfer.note or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Лента изменений -->
+        {% set hist = history if history is defined else correspondence.history %}
+        {% if hist %}
+        <div class="info-section">
+            <h3>История изменений</h3>
+            <ul class="timeline">
+                {% for entry in hist|sort(attribute='created_at', reverse=true) %}
+                <li class="timeline-item">
+                    <div class="timeline-meta">
+                        {{ entry.created_at.strftime('%d.%m.%Y %H:%M') if entry.created_at else '—' }}
+                        {% if entry.user %} · {{ entry.user.full_name }}{% endif %}
+                    </div>
+                    <div class="timeline-action">{{ entry.action }}{% if entry.field_name %} — {{ entry.field_name }}{% endif %}</div>
+                    {% if entry.note %}
+                    <div class="timeline-note">{{ entry.note }}</div>
+                    {% endif %}
+                    {% if entry.old_value or entry.new_value %}
+                    <div class="timeline-diff">
+                        {% if entry.old_value %}<span>{{ entry.old_value }}</span> → {% endif %}
+                        <span>{{ entry.new_value or '—' }}</span>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Форма передачи -->
+        <div class="info-section">
+            <h3>Передать документ</h3>
+            <form action="/api/correspondences/{{ correspondence.id }}/transfer" method="POST" class="transfer-form">
+                <div class="transfer-group">
+                    <label for="transferred_to_id">Сотрудник</label>
+                    <select name="transferred_to_id" id="transferred_to_id" required class="transfer-select">
+                        <option value="">Выберите сотрудника</option>
+                        {% for user in available_users %}
+                        <option value="{{ user.id }}">{{ user.full_name }} — {{ user.department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="transfer-group" style="flex: 2;">
+                    <label for="note">Комментарий</label>
+                    <input type="text" id="note" name="note" placeholder="Основание для передачи..." class="transfer-input">
+                </div>
+                <div class="transfer-group" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-action btn-transfer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Передать
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Кнопки действий -->
+        <div class="action-buttons">
+            {% if current_user.role != 'viewer' and correspondence.status.value != 'Исполнено' %}
+            {% if correspondence.status.value != 'В работе' %}
+            <form action="/api/correspondences/{{ correspondence.id }}/take-in-work" method="POST" style="display: inline;">
+                <button type="submit" class="btn-action btn-edit">Взять в работу</button>
+            </form>
+            {% endif %}
+            {% if correspondence.waiting_external %}
+            <form action="/api/correspondences/{{ correspondence.id }}/waiting-external" method="POST" style="display: inline;">
+                <input type="hidden" name="waiting" value="0">
+                <button type="submit" class="btn-action btn-back">Снять «жду ответа»</button>
+            </form>
+            {% else %}
+            <form action="/api/correspondences/{{ correspondence.id }}/waiting-external" method="POST" style="display: inline;"
+                  onsubmit="var n=prompt('Комментарий (необязательно):'); if(n===null) return false; this.querySelector('[name=note]').value=n; return true;">
+                <input type="hidden" name="waiting" value="1">
+                <input type="hidden" name="note" value="">
+                <button type="submit" class="btn-action btn-back">Жду внешнего ответа</button>
+            </form>
+            {% endif %}
+            {% endif %}
+
+            <a href="/api/correspondences/{{ correspondence.id }}/edit" class="btn-action btn-edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
+                    <path d="M4 20h16"/>
+                </svg>
+                Редактировать
+            </a>
+            
+            {% if current_user.is_admin or correspondence.created_by_id == current_user.id %}
+            <form action="/api/correspondences/{{ correspondence.id }}/delete" method="POST" 
+                  onsubmit="return confirm('Удалить документ? Это действие необратимо.')" style="display: inline;">
+                <button type="submit" class="btn-action btn-delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Удалить
+                </button>
+            </form>
+            {% endif %}
+            
+            <a href="/api/correspondences/" class="btn-action btn-back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                Назад
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

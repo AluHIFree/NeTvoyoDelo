@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Обновления | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upd-hero {
+        margin-bottom: 1.5rem;
+    }
+    .upd-hero h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0 0 0.35rem;
+    }
+    .upd-hero h1 svg { width: 28px; height: 28px; stroke: var(--primary); }
+    .upd-hero p { color: var(--text-muted); font-size: 0.85rem; margin: 0; max-width: 42rem; }
+
+    .upd-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 1.25rem;
+        align-items: start;
+    }
+    @media (max-width: 900px) {
+        .upd-grid { grid-template-columns: 1fr; }
+    }
+
+    .upd-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    .upd-card-h {
+        padding: 0.85rem 1.2rem;
+        border-bottom: 1px solid var(--border-light);
+        background: var(--primary-bg);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-primary);
+    }
+    .upd-card-b { padding: 1.2rem; }
+
+    .upd-meta {
+        display: grid;
+        gap: 0.65rem;
+        margin-bottom: 1.1rem;
+    }
+    .upd-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.875rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px dashed var(--border-light);
+    }
+    .upd-row:last-child { border-bottom: 0; }
+    .upd-row span { color: var(--text-muted); }
+    .upd-row strong { color: var(--text-primary); font-weight: 600; text-align: right; word-break: break-all; }
+
+    .upd-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 0.5rem;
+    }
+    .upd-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border: 1px solid var(--border-light);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        padding: 0.55rem 0.95rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .upd-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .upd-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .upd-btn-primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .upd-btn-primary:hover { filter: brightness(1.05); color: #fff; }
+    .upd-btn svg { width: 16px; height: 16px; }
+
+    .upd-banner {
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-light);
+    }
+    .upd-banner.ok { background: color-mix(in srgb, #16a34a 12%, var(--bg-card)); border-color: #16a34a55; }
+    .upd-banner.warn { background: color-mix(in srgb, #ca8a04 12%, var(--bg-card)); border-color: #ca8a0455; }
+    .upd-banner.err { background: color-mix(in srgb, #dc2626 12%, var(--bg-card)); border-color: #dc262655; }
+    .upd-banner.info { background: var(--primary-bg); }
+
+    .upd-changelog {
+        white-space: pre-wrap;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: var(--text-primary);
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        max-height: 28rem;
+        overflow: auto;
+        margin: 0;
+    }
+    .upd-empty { color: var(--text-muted); font-size: 0.85rem; }
+
+    .upd-safe {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+    }
+    .upd-safe li {
+        font-size: 0.82rem;
+        color: var(--text-secondary, var(--text-muted));
+        padding-left: 1.35rem;
+        position: relative;
+    }
+    .upd-safe li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.35rem;
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: #16a34a;
+    }
+
+    .upd-spin {
+        width: 14px; height: 14px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        animation: updspin 0.7s linear infinite;
+    }
+    @keyframes updspin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upd-hero">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 16h5v5"/>
+        </svg>
+        Обновления
+    </h1>
+    <p>
+        Проверка и установка обновлений с GitHub.
+        База данных, настройки <code>.env</code> и загруженные вложения не затрагиваются.
+    </p>
+</div>
+
+<div id="upd-flash"></div>
+
+<div class="upd-grid">
+    <section class="upd-card">
+        <div class="upd-card-h">Состояние</div>
+        <div class="upd-card-b">
+            <div class="upd-meta">
+                <div class="upd-row">
+                    <span>Локальная версия</span>
+                    <strong id="upd-local">{{ local_version }}</strong>
+                </div>
+                <div class="upd-row">
+                    <span>Репозиторий</span>
+                    <strong><a href="https://github.com/{{ repo }}" target="_blank" rel="noopener">{{ repo }}</a></strong>
+                </div>
+                <div class="upd-row">
+                    <span>Последняя проверка</span>
+                    <strong id="upd-last-check">{{ meta.last_check_at or "ещё не выполнялась" }}</strong>
+                </div>
+                <div class="upd-row">
+                    <span>Последнее обновление</span>
+                    <strong id="upd-last-apply">{{ meta.updated_at or "—" }}</strong>
+                </div>
+                <div class="upd-row">
+                    <span>Commit</span>
+                    <strong id="upd-sha">{{ meta.commit_sha or "—" }}</strong>
+                </div>
+            </div>
+
+            <div class="upd-actions">
+                <button type="button" class="upd-btn upd-btn-primary" id="upd-check-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Проверить обновления
+                </button>
+                <button type="button" class="upd-btn" id="upd-apply-btn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Установить обновление
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="upd-card">
+        <div class="upd-card-h">Что сохраняется</div>
+        <div class="upd-card-b">
+            <ul class="upd-safe">
+                <li><code>correspondences.db</code> — вся переписка и пользователи</li>
+                <li><code>.env</code> — локальные настройки и секреты</li>
+                <li><code>app/static/uploads/</code> — вложения писем</li>
+                <li><code>app/static/avatars/</code> — аватары</li>
+                <li><code>python/</code> — встроенный интерпретатор (portable)</li>
+            </ul>
+            <p class="upd-empty" style="margin-top:1rem;">
+                После установки перезапустите сервис (<code>STOP.bat</code> → <code>START.bat</code>
+                или остановите и снова запустите <code>run.py</code>).
+            </p>
+        </div>
+    </section>
+</div>
+
+<section class="upd-card" style="margin-top:1.25rem;">
+    <div class="upd-card-h">Описание изменений</div>
+    <div class="upd-card-b">
+        <div id="upd-remote-meta" class="upd-empty" style="margin-bottom:0.75rem;">
+            Нажмите «Проверить обновления», чтобы загрузить сведения с GitHub.
+        </div>
+        <pre class="upd-changelog" id="upd-changelog">—</pre>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const flash = document.getElementById('upd-flash');
+    const checkBtn = document.getElementById('upd-check-btn');
+    const applyBtn = document.getElementById('upd-apply-btn');
+    const changelog = document.getElementById('upd-changelog');
+    const remoteMeta = document.getElementById('upd-remote-meta');
+    const localEl = document.getElementById('upd-local');
+    const lastCheck = document.getElementById('upd-last-check');
+    const lastApply = document.getElementById('upd-last-apply');
+    const shaEl = document.getElementById('upd-sha');
+
+    function banner(type, html) {
+        flash.innerHTML = `<div class="upd-banner ${type}">${html}</div>`;
+    }
+
+    function setBusy(btn, busy, labelHtml) {
+        btn.disabled = busy || (btn === applyBtn && !btn.dataset.ready);
+        if (busy) {
+            btn.dataset.label = btn.innerHTML;
+            btn.innerHTML = `<span class="upd-spin"></span> ${labelHtml}`;
+        } else if (btn.dataset.label) {
+            btn.innerHTML = btn.dataset.label;
+        }
+    }
+
+    async function checkUpdates() {
+        setBusy(checkBtn, true, 'Проверка…');
+        applyBtn.disabled = true;
+        applyBtn.dataset.ready = '';
+        try {
+            const res = await fetch('/updates/status', {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Ошибка проверки');
+
+            localEl.textContent = data.local_version || localEl.textContent;
+            if (data.meta && data.meta.last_check_at) lastCheck.textContent = data.meta.last_check_at;
+            if (data.meta && data.meta.updated_at) lastApply.textContent = data.meta.updated_at;
+            if (data.meta && data.meta.commit_sha) shaEl.textContent = data.meta.commit_sha;
+            if (data.remote_sha) shaEl.textContent = data.meta && data.meta.commit_sha
+                ? data.meta.commit_sha
+                : (shaEl.textContent === '—' ? data.remote_sha : shaEl.textContent);
+
+            if (data.error) {
+                banner('err', data.error);
+                changelog.textContent = '—';
+                remoteMeta.textContent = 'Не удалось получить данные с GitHub.';
+                return;
+            }
+
+            const link = data.release_url
+                ? ` <a href="${data.release_url}" target="_blank" rel="noopener">Открыть на GitHub</a>`
+                : '';
+            remoteMeta.innerHTML =
+                `<strong>${data.release_name || 'Удалённая версия'}</strong>` +
+                ` · удалённая: <code>${data.remote_version}</code>` +
+                (data.published_at ? ` · ${data.published_at}` : '') +
+                link;
+
+            changelog.textContent = data.changelog || 'Нет описания изменений.';
+
+            if (data.update_available) {
+                banner('warn',
+                    `Доступно обновление: <strong>${data.remote_version}</strong> ` +
+                    `(сейчас ${data.local_version}). База и вложения не будут затронуты.`
+                );
+                applyBtn.disabled = false;
+                applyBtn.dataset.ready = '1';
+            } else {
+                banner('ok', 'Установлена актуальная версия. Новых обновлений нет.');
+                applyBtn.disabled = true;
+                applyBtn.dataset.ready = '';
+            }
+        } catch (e) {
+            banner('err', e.message || String(e));
+        } finally {
+            setBusy(checkBtn, false);
+            if (!applyBtn.dataset.ready) applyBtn.disabled = true;
+        }
+    }
+
+    async function applyUpdate() {
+        if (!applyBtn.dataset.ready) return;
+        if (!confirm('Установить обновление с GitHub?\n\nБудут обновлены файлы приложения.\nБаза данных, .env и вложения останутся без изменений.\nПосле установки нужно перезапустить сервис.')) {
+            return;
+        }
+        setBusy(applyBtn, true, 'Установка…');
+        checkBtn.disabled = true;
+        try {
+            const res = await fetch('/updates/apply', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error((data && data.error) || 'Ошибка установки');
+
+            localEl.textContent = data.version || localEl.textContent;
+            if (data.commit_sha) shaEl.textContent = data.commit_sha;
+            lastApply.textContent = new Date().toISOString();
+            applyBtn.dataset.ready = '';
+            banner('ok',
+                `Обновление установлено (v${data.version}). Скопировано файлов: ${data.copied}. ` +
+                `<strong>Перезапустите сервис</strong>, чтобы применить изменения.` +
+                (data.pip_note ? `<br><span style="opacity:.85">${data.pip_note}</span>` : '')
+            );
+        } catch (e) {
+            banner('err', e.message || String(e));
+        } finally {
+            setBusy(applyBtn, false);
+            applyBtn.disabled = true;
+            checkBtn.disabled = false;
+        }
+    }
+
+    checkBtn.addEventListener('click', checkUpdates);
+    applyBtn.addEventListener('click', applyUpdate);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('applied')) {
+        banner('ok', 'Обновление установлено. Перезапустите сервис (STOP → START).');
+    } else if (params.get('apply_error')) {
+        banner('err', params.get('apply_error'));
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Логи доставки | NeTvoyoDelo Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { margin-bottom: 1.75rem; }
+    .page-header h1 {
+        font-size: 1.35rem; font-weight: 600; color: var(--text-primary);
+        margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .page-header h1 svg { width: 28px; height: 28px; stroke: var(--primary); }
+    .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+    .panel {
+        background: var(--bg-card); border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;
+    }
+    .panel-header {
+        padding: 1rem 1.25rem; background: var(--primary-bg);
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.3px; color: var(--text-primary);
+    }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+        text-align: left; padding: 0.75rem 1rem; font-size: 0.65rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        color: var(--text-muted); background: var(--primary-bg);
+        border-bottom: 1px solid var(--border-light);
+    }
+    .data-table td {
+        padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-primary);
+        border-bottom: 1px solid var(--border-light); vertical-align: top;
+    }
+    .data-table tbody tr:hover { background: var(--primary-bg); }
+    .badge {
+        display: inline-flex; padding: 0.15rem 0.55rem; border-radius: 20px;
+        font-size: 0.65rem; font-weight: 600;
+    }
+    .badge-sent { background: #d1fae5; color: #059669; }
+    .badge-failed { background: #fee2e2; color: #dc2626; }
+    .badge-skipped { background: #fef3c7; color: #d97706; }
+    .btn-back {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.45rem 0.9rem; border: 1px solid var(--border-light);
+        border-radius: var(--radius-md); color: var(--text-secondary);
+        text-decoration: none; font-size: 0.8rem;
+    }
+    .btn-back:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+    .empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
+    .link { color: var(--primary); text-decoration: none; font-weight: 500; }
+    .link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        Логи доставки
+    </h1>
+    <p>Журнал отправки уведомлений по каналам</p>
+</div>
+
+<div class="panel">
+    <div class="panel-header">Последние записи</div>
+    {% if logs %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Время</th>
+                    <th>Пользователь</th>
+                    <th>Канал</th>
+                    <th>Статус</th>
+                    <th>Документ</th>
+                    <th>Детали</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%d.%m.%Y %H:%M') if log.created_at else '—' }}</td>
+                    <td>
+                        {% if log.user %}{{ log.user.full_name }}
+                        {% elif log.user_id %}#{{ log.user_id }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ log.channel }}</td>
+                    <td>
+                        <span class="badge
+                            {% if log.status == 'sent' %}badge-sent
+                            {% elif log.status == 'failed' %}badge-failed
+                            {% else %}badge-skipped{% endif %}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.correspondence_id %}
+                        <a class="link" href="/api/correspondences/{{ log.correspondence_id }}">#{{ log.correspondence_id }}</a>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); max-width: 280px; word-break: break-word;">
+                        {{ log.detail or '—' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">Записей доставки пока нет</div>
+    {% endif %}
+</div>
+
+<a href="/admin/" class="btn-back">← К админ-панели</a>
+{% endblock %}

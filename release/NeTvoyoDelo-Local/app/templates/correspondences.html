@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+
+{% block title %}Документооборот | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.025em;
+        margin: 0 0 0.25rem;
+    }
+
+    .page-description {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        padding: 1rem 1.15rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+    }
+
+    .filter-select,
+    .filter-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        font-family: inherit;
+        transition: border-color var(--ease), box-shadow var(--ease);
+    }
+
+    .filter-select:focus,
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-filter {
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 560;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid transparent;
+        letter-spacing: 0.02em;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+    }
+
+    .btn-filter-primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .btn-filter-primary:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+    .btn-filter-secondary {
+        background: transparent;
+        border-color: var(--border);
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-filter-secondary:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .btn-create {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 1rem;
+        background: var(--primary);
+        color: #fff;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background var(--ease), border-color var(--ease);
+    }
+
+    .btn-create:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+        color: #fff;
+    }
+
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 1rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+    }
+
+    .btn-export:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.65rem;
+    }
+
+    .table-container {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .correspondence-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .correspondence-table th {
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--paper-100);
+        border-bottom: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .correspondence-table th {
+        background: var(--bg-elevated);
+    }
+
+    .correspondence-table td {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+
+    .correspondence-table tbody tr:hover {
+        background: var(--primary-muted);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 560;
+        border: 1px solid transparent;
+    }
+
+    .status-pending {
+        background: var(--paper-100);
+        color: var(--steel-600);
+        border-color: var(--border);
+    }
+
+    .status-progress {
+        background: var(--primary-muted);
+        color: var(--primary);
+        border-color: rgba(20, 61, 102, 0.18);
+    }
+
+    .status-completed {
+        background: var(--success-muted);
+        color: var(--success);
+        border-color: rgba(31, 107, 74, 0.2);
+    }
+
+    .status-expired {
+        background: var(--danger-muted);
+        color: var(--danger);
+        border-color: rgba(155, 44, 44, 0.22);
+    }
+
+    .status-transferred {
+        background: rgba(61, 90, 115, 0.1);
+        color: var(--steel-600);
+        border-color: rgba(61, 90, 115, 0.2);
+    }
+
+    .btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.65rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+    }
+
+    .btn-view:hover {
+        border-color: var(--border-strong);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .btn-view svg {
+        width: 12px;
+        height: 12px;
+        stroke: currentColor;
+    }
+
+    .letter-number {
+        font-weight: 600;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        color: var(--primary);
+        margin-bottom: 0.15rem;
+    }
+
+    .letter-date {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .executor-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .executor-link:hover {
+        text-decoration: underline;
+    }
+
+    .deadline-normal {
+        font-size: 0.8rem;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: 450;
+    }
+
+    .filter-checkbox input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary);
+    }
+
+    .quick-status {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.7rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        max-width: 120px;
+        font-family: inherit;
+    }
+
+    .saved-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .saved-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--primary);
+        background: var(--primary-muted);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        transition: border-color var(--ease), background var(--ease);
+    }
+
+    .saved-filter-chip:hover {
+        border-color: var(--border-strong);
+        background: var(--paper-100);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 2rem;
+    }
+
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+        stroke: var(--text-muted);
+        opacity: 0.4;
+        margin-bottom: 0.85rem;
+    }
+
+    .empty-state h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.4rem;
+    }
+
+    .empty-state p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 0 0 1rem;
+    }
+
+    @media (max-width: 1024px) {
+        .hide-tablet {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-actions {
+            justify-content: flex-end;
+        }
+
+        .correspondence-table th,
+        .correspondence-table td {
+            padding: 0.6rem 0.85rem;
+        }
+
+        .action-buttons {
+            width: 100%;
+        }
+
+        .btn-create,
+        .btn-export {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .hide-mobile {
+            display: none;
+        }
+
+        .correspondence-table td {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Реестр документов</h1>
+        <p class="page-description">Управление входящей корреспонденцией</p>
+    </div>
+    <div class="action-buttons">
+        <a href="/api/correspondences/links" class="btn-export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/>
+                <path d="M8.5 8.5l7 7"/>
+            </svg>
+            Связи писем
+        </a>
+        <a href="/api/correspondences/export{% if status_filter %}?status_filter={{ status_filter }}{% endif %}" class="btn-export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v12m0 0-3-3m3 3 3-3M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>
+            </svg>
+            Экспорт
+        </a>
+        <a href="/api/correspondences/create" class="btn-create">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Создать
+        </a>
+    </div>
+</div>
+
+<!-- Панель фильтров -->
+<div class="filter-bar">
+    <form method="GET" action="/api/correspondences/" class="filter-form">
+        <div class="filter-group">
+            <label for="q">Поиск</label>
+            <input type="search" id="q" name="q" class="filter-input" placeholder="Номер, отправитель, содержание…"
+                   value="{{ q|default('', true) }}">
+        </div>
+        <div class="filter-group">
+            <label for="status_filter">Статус</label>
+            <select id="status_filter" name="status_filter" class="filter-select">
+                <option value="">Все статусы</option>
+                {% for status in statuses %}
+                <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if users is defined and users %}
+        <div class="filter-group">
+            <label for="executor_id">Исполнитель</label>
+            <select id="executor_id" name="executor_id" class="filter-select">
+                <option value="">Все исполнители</option>
+                {% for user in users %}
+                <option value="{{ user.id }}" {% if executor_id|default('')|string == user.id|string %}selected{% endif %}>
+                    {{ user.full_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="filter-group" style="flex: 0 0 auto; min-width: auto;">
+            <label>&nbsp;</label>
+            <label class="filter-checkbox">
+                <input type="checkbox" name="urgent" value="1" {% if urgent|default(false) %}checked{% endif %}>
+                Только срочные
+            </label>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter btn-filter-primary">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 0.25rem;">
+                    <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3"/>
+                </svg>
+                Применить
+            </button>
+            {% if status_filter or q|default('') or urgent|default(false) or executor_id|default('') %}
+            <a href="/api/correspondences/" class="btn-filter btn-filter-secondary" style="text-decoration: none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 0.25rem;">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Сбросить
+            </a>
+            {% endif %}
+        </div>
+    </form>
+    {% if saved_filters is defined and saved_filters %}
+    <div class="saved-filters">
+        <span style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); align-self: center;">Сохранённые:</span>
+        <select class="filter-select" style="max-width: 220px; flex: 0 1 220px;"
+                onchange="if (this.value) window.location.href=this.value;">
+            <option value="">Выбрать фильтр…</option>
+            {% for sf in saved_filters %}
+            <option value="/api/correspondences/?saved_filter={{ sf.id }}">{{ sf.name }}</option>
+            {% endfor %}
+        </select>
+        {% for sf in saved_filters %}
+        <a class="saved-filter-chip" href="/api/correspondences/?saved_filter={{ sf.id }}">{{ sf.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Таблица документов -->
+<div class="table-container">
+    {% if correspondences %}
+    <div style="overflow-x: auto;">
+        <table class="correspondence-table">
+            <thead>
+                <tr>
+                    <th style="width: 45px;">#</th>
+                    <th>Вх. номер</th>
+                    <th class="hide-tablet">Поступление</th>
+                    <th>Отправитель</th>
+                    <th class="hide-tablet hide-mobile">Содержание</th>
+                    <th>Исполнитель</th>
+                    <th>Срок</th>
+                    <th>Статус</th>
+                    <th style="width: 110px;">Быстро</th>
+                    <th style="width: 85px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for corr in correspondences %}
+                <tr>
+                    <td style="font-weight: 500; color: var(--text-muted);">
+                        {{ loop.index }}
+                    </td>
+                    <td>
+                        <div class="letter-number">{{ corr.incoming_number }}</div>
+                        <div class="letter-date">{{ corr.incoming_date.strftime('%d.%m.%Y') }}</div>
+                    </td>
+                    <td class="hide-tablet">{{ corr.received_date.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <div style="font-weight: 500; max-width: 180px; white-space: normal; word-break: break-word; line-height: 1.4;">
+                            {{ corr.sender[:35] }}{% if corr.sender|length > 35 %}…{% endif %}
+                        </div>
+                    </td>
+                    <td class="hide-tablet hide-mobile">
+                        <div style="max-width: 200px; white-space: normal; word-break: break-word; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4;">
+                            {{ corr.content[:45] }}{% if corr.content|length > 45 %}…{% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if corr.executor %}
+                        <a href="#" class="executor-link">{{ corr.executor.full_name.split()[0] }}</a>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.7rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set days_left = (corr.deadline - today).days if corr.deadline and today else none %}
+                        {% if corr.status.value == 'Исполнено' %}
+                            {% set st = 'done' %}{% set st_label = 'Исполнено' %}
+                        {% elif corr.waiting_external %}
+                            {% set st = 'waiting' %}{% set st_label = 'Жду ответа' %}
+                        {% elif days_left is not none and days_left < 0 %}
+                            {% set st = 'overdue' %}{% set st_label = 'Просрочено' %}
+                        {% elif days_left is not none and days_left <= 1 %}
+                            {% set st = 'critical' %}{% set st_label = 'Критично' %}
+                        {% elif days_left is not none and days_left <= 5 %}
+                            {% set st = 'start' %}{% set st_label = 'Пора начинать' %}
+                        {% else %}
+                            {% set st = 'early' %}{% set st_label = 'Ещё рано' %}
+                        {% endif %}
+                        <div class="mono" style="font-weight: 600;">{{ corr.deadline.strftime('%d.%m.%Y') }}</div>
+                        <span class="deadline-stage deadline-stage-{{ st }}" style="margin-top: 0.25rem;">{{ st_label }}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge
+                            {% if corr.status.value == 'Исполнено' %}status-completed
+                            {% elif corr.status.value == 'Просрочено' %}status-expired
+                            {% elif corr.status.value == 'В работе' %}status-progress
+                            {% elif corr.status.value == 'Передано' %}status-transferred
+                            {% else %}status-pending{% endif %}">
+                            {{ corr.status.value }}
+                        </span>
+                        {% if corr.waiting_external and corr.status.value != 'Исполнено' %}
+                        <div style="margin-top: 0.25rem;"><span class="deadline-stage deadline-stage-waiting">Жду ответа</span></div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="/api/correspondences/{{ corr.id }}/quick-status" style="margin: 0;" class="quick-status-form">
+                            <input type="hidden" name="completion_note" value="">
+                            <select name="status" class="quick-status" title="Сменить статус">
+                                {% for status in statuses %}
+                                <option value="{{ status }}" {% if corr.status.value == status %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="/api/correspondences/{{ corr.id }}" class="btn-view">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Открыть
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 4h16v16H4z"/>
+            <path d="M8 8h8M8 12h6M8 16h4"/>
+        </svg>
+        <h4>Нет документов</h4>
+        <p>Список корреспонденции пуст</p>
+        <a href="/api/correspondences/create" class="btn-create" style="display: inline-flex;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Создать документ
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.quick-status-form').forEach(function(form) {
+            const select = form.querySelector('select[name="status"]');
+            const noteInput = form.querySelector('input[name="completion_note"]');
+            const initial = select.value;
+            select.addEventListener('change', function() {
+                if (select.value === 'Исполнено') {
+                    const note = window.prompt('Укажите примечание об исполнении (обязательно):');
+                    if (!note || !note.trim()) {
+                        select.value = initial;
+                        return;
+                    }
+                    noteInput.value = note.trim();
+                } else {
+                    noteInput.value = '';
+                }
+                form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}

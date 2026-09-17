@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}Поток {{ flow_name }} | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .flow-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .page-title {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.3px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-export:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .flow-stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .flow-stat {
+        background: var(--primary-bg);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1.25rem;
+        text-align: center;
+        min-width: 100px;
+        border: 1px solid var(--border-light);
+    }
+    
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-value-total {
+        color: var(--text-primary);
+    }
+    
+    .stat-value-completed {
+        color: var(--success);
+    }
+    
+    .stat-value-progress {
+        color: var(--warning);
+    }
+    
+    .stat-value-percent {
+        color: var(--primary);
+    }
+    
+    .table-container {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+    }
+    
+    .data-table {
+        width: 100%;
+    }
+    
+    .data-table thead tr {
+        background: var(--primary-bg);
+    }
+    
+    .data-table th {
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .data-table td {
+        padding: 0.875rem 1rem;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-light);
+        vertical-align: middle;
+    }
+    
+    .data-table tbody tr {
+        transition: var(--transition);
+    }
+    
+    .data-table tbody tr:hover {
+        background: var(--primary-bg);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .status-completed {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .status-expired {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .status-progress {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    [data-theme='dark'] .status-completed {
+        background: #064e3b;
+        color: #34d399;
+    }
+    
+    [data-theme='dark'] .status-expired {
+        background: #7f1d1d;
+        color: #f87171;
+    }
+    
+    [data-theme='dark'] .status-progress {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+    
+    [data-theme='dark'] .status-pending {
+        background: #78350f;
+        color: #fbbf24;
+    }
+    
+    .btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.8rem;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-view:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        margin-top: 1rem;
+    }
+    
+    .btn-back:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 2rem;
+    }
+    
+    .empty-state svg {
+        width: 56px;
+        height: 56px;
+        stroke: var(--text-muted);
+        opacity: 0.4;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    .letter-number {
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.2rem;
+    }
+    
+    .letter-date {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+    
+    .executor-name {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .executor-empty {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .flow-header {
+            padding: 1rem;
+        }
+        
+        .header-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .flow-stats {
+            gap: 0.75rem;
+        }
+        
+        .flow-stat {
+            padding: 0.5rem 1rem;
+            min-width: 80px;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 0.625rem 0.875rem;
+        }
+        
+        .hide-mobile {
+            display: none;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .data-table {
+            font-size: 0.75rem;
+        }
+        
+        .flow-stat {
+            flex: 1;
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flow-header">
+    <div class="header-top">
+        <div>
+            <h1 class="page-title">Поток: {{ flow_name }}</h1>
+            <p class="page-subtitle">Документы, сгруппированные по потоку делопроизводства</p>
+        </div>
+        <a href="/flows/{{ flow_name }}/export" class="btn-export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v12m0 0-3-3m3 3 3-3M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>
+            </svg>
+            Экспорт
+        </a>
+    </div>
+    
+    <div class="flow-stats">
+        <div class="flow-stat">
+            <div class="stat-value stat-value-total">{{ total }}</div>
+            <div class="stat-label">Всего</div>
+        </div>
+        <div class="flow-stat">
+            <div class="stat-value stat-value-completed">{{ completed }}</div>
+            <div class="stat-label">Исполнено</div>
+        </div>
+        <div class="flow-stat">
+            <div class="stat-value stat-value-progress">{{ in_progress }}</div>
+            <div class="stat-label">В работе</div>
+        </div>
+        <div class="flow-stat">
+            <div class="stat-value stat-value-percent">{{ progress_percent }}%</div>
+            <div class="stat-label">Выполнение</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    {% if correspondences %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 45px;">#</th>
+                    <th>Вх. номер</th>
+                    <th class="hide-mobile">Дата</th>
+                    <th>Отправитель</th>
+                    <th class="hide-mobile">Содержание</th>
+                    <th>Исполнитель</th>
+                    <th>Срок</th>
+                    <th>Статус</th>
+                    <th style="width: 80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for corr in correspondences %}
+                <tr>
+                    <td style="font-weight: 500; color: var(--text-muted);">
+                        {{ loop.index }}
+                    </td>
+                    <td>
+                        <div class="letter-number">{{ corr.incoming_number }}</div>
+                        <div class="letter-date">{{ corr.incoming_date.strftime('%d.%m.%Y') }}</div>
+                    </td>
+                    <td class="hide-mobile">{{ corr.received_date.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <div style="max-width: 160px; white-space: normal; word-break: break-word; line-height: 1.4;">
+                            {{ corr.sender[:30] }}{% if corr.sender|length > 30 %}…{% endif %}
+                        </div>
+                    </td>
+                    <td class="hide-mobile">
+                        <div style="max-width: 200px; white-space: normal; word-break: break-word; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4;">
+                            {{ corr.content[:45] }}{% if corr.content|length > 45 %}…{% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if corr.executor %}
+                        <span class="executor-name">{{ corr.executor.full_name.split()[0] }}</span>
+                        {% else %}
+                        <span class="executor-empty">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ corr.deadline.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if corr.status.value == 'Исполнено' %}status-completed
+                            {% elif corr.status.value == 'Просрочено' %}status-expired
+                            {% elif corr.status.value == 'В работе' %}status-progress
+                            {% else %}status-pending{% endif %}">
+                            {{ corr.status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/api/correspondences/{{ corr.id }}" class="btn-view">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Открыть
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 4h16v16H4z"/>
+            <path d="M8 8h8M8 12h6M8 16h4"/>
+        </svg>
+        <p>В данном потоке нет документов</p>
+    </div>
+    {% endif %}
+</div>
+
+<a href="/flows/" class="btn-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+    </svg>
+    Назад к списку потоков
+</a>
+{% endblock %}

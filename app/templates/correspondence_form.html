@@ -1,0 +1,762 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактирование документа' if is_edit else 'Новый документ' }} | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-light);
+        background: var(--primary-bg);
+    }
+    
+    .form-header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-header svg {
+        width: 24px;
+        height: 24px;
+        stroke: var(--primary);
+    }
+    
+    .form-header p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+    
+    .form-group label .required {
+        color: var(--danger);
+        margin-left: 0.2rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.6rem 0.85rem;
+        background: var(--bg-main);
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: var(--transition);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    select.form-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.85rem center;
+        background-size: 1rem;
+    }
+    
+    .form-hint {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .alert-error {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(220, 38, 38, 0.04));
+        color: var(--danger);
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        border-left: 3px solid var(--danger);
+        font-size: 0.85rem;
+    }
+    
+    .alert-error svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--danger);
+        flex-shrink: 0;
+    }
+    
+    .email-send-panel {
+        margin-top: 1.5rem;
+        padding: 1.25rem 1.35rem;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: linear-gradient(180deg, #f8fafc 0%, var(--bg-card) 100%);
+    }
+    [data-theme="dark"] .email-send-panel {
+        background: var(--bg-elevated);
+    }
+    .email-send-head h3 {
+        margin: 0 0 0.25rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: none;
+        letter-spacing: -0.01em;
+    }
+    .email-send-head p {
+        margin: 0 0 1rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .email-mode-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+    }
+    .email-mode {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        text-transform: none;
+        letter-spacing: 0;
+        cursor: pointer;
+    }
+    .email-flash {
+        padding: 0.65rem 0.85rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.85rem;
+    }
+    .email-flash-ok {
+        background: #d1fae5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+    .email-flash-err {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .btn-email-send { margin-top: 0.35rem; }
+    .linked-files-box {
+        padding: 0.75rem 0.85rem;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-main);
+    }
+    .linked-files-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.35rem;
+    }
+    .linked-files-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 0.82rem;
+        color: var(--text-primary);
+        padding: 0.3rem 0;
+        border-top: 1px dashed var(--border-light);
+    }
+    .linked-files-list li:first-child { border-top: none; }
+    .linked-file-size {
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .btn-submit:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.5rem;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-cancel:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .form-divider {
+        margin: 1rem 0 0.75rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Большое поле для отчета */
+    .report-textarea {
+        width: 100%;
+        padding: 1rem;
+        background: var(--bg-main);
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        transition: var(--transition);
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .report-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+    
+    @media (max-width: 900px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        
+        .form-body {
+            padding: 1.25rem;
+        }
+        
+        .form-header {
+            padding: 1rem 1.25rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-submit,
+        .btn-cancel {
+            justify-content: center;
+        }
+        
+        .form-control {
+            font-size: 0.8rem;
+            padding: 0.55rem 0.75rem;
+        }
+        
+        .report-textarea {
+            font-size: 0.85rem;
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div class="form-header">
+        <h1>
+            {% if is_edit %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
+                <path d="M4 20h16"/>
+            </svg>
+            Редактирование документа
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Создание документа
+            {% endif %}
+        </h1>
+        <p>{% if is_edit %}Внесите необходимые изменения{% else %}Заполните форму для регистрации документа{% endif %}</p>
+    </div>
+    
+    <div class="form-body">
+        {% if error %}
+        <div class="alert-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+        
+        <form action="{{ '/api/correspondences/' + correspondence.id|string + '/edit' if is_edit else '/api/correspondences/create' }}" method="POST" id="documentForm">
+            <div class="form-grid">
+                <div>
+                    <div class="form-group">
+                        <label for="incoming_number">Входящий номер <span class="required">*</span></label>
+                        <input type="text" id="incoming_number" name="incoming_number" class="form-control" 
+                               value="{{ correspondence.incoming_number if correspondence else '' }}" required>
+                        <span class="form-hint">Формат: 123/45-67</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="incoming_date">Дата документа <span class="required">*</span></label>
+                        <input type="date" id="incoming_date" name="incoming_date" class="form-control" 
+                               value="{{ correspondence.incoming_date.strftime('%Y-%m-%d') if correspondence and correspondence.incoming_date else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="received_date">Дата поступления <span class="required">*</span></label>
+                        <input type="date" id="received_date" name="received_date" class="form-control" 
+                               value="{{ correspondence.received_date.strftime('%Y-%m-%d') if correspondence and correspondence.received_date else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sender">Отправитель <span class="required">*</span></label>
+                        <input type="text" id="sender" name="sender" class="form-control" 
+                               value="{{ correspondence.sender if correspondence else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="content">Содержание <span class="required">*</span></label>
+                        <textarea id="content" name="content" class="form-control" rows="4" required>{{ correspondence.content if correspondence else '' }}</textarea>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="form-group">
+                        <label for="deadline">Срок исполнения <span class="required">*</span></label>
+                        <input type="date" id="deadline" name="deadline" class="form-control" 
+                               value="{{ correspondence.deadline.strftime('%Y-%m-%d') if correspondence and correspondence.deadline else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="executor_id">Ответственный</label>
+                        <select id="executor_id" name="executor_id" class="form-control">
+                            <option value="">Не назначен</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}" {% if correspondence and correspondence.executor_id == user.id %}selected{% endif %}>
+                                {{ user.full_name }} — {{ user.department }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status" class="form-control">
+                            {% for status_item in statuses %}
+                            <option value="{{ status_item }}" {% if correspondence and correspondence.status.value == status_item %}selected{% endif %}>
+                                {{ status_item }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="completion_note">Примечание об исполнении</label>
+                        <textarea id="completion_note" name="completion_note" class="form-control" rows="3"
+                                  placeholder="Обязательно при статусе «Исполнено»">{{ correspondence.completion_note if correspondence and correspondence.completion_note else '' }}</textarea>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Укажите, что сделано по письму, перед переводом в «Исполнено».</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-checkbox" style="display: flex; align-items: flex-start; gap: 0.5rem; text-transform: none; letter-spacing: 0; font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">
+                            <input type="checkbox" name="waiting_external" value="1" id="waiting_external"
+                                {% if correspondence and correspondence.waiting_external %}checked{% endif %}
+                                style="margin-top: 0.2rem;">
+                            <span>
+                                Жду внешнего ответа
+                                <small style="display: block; color: var(--text-muted); font-weight: 400; margin-top: 0.15rem;">
+                                    Письмо не в вашей работе (у отправителя / внешнего адресата). Не учитывается в личной просрочке и нагрузке.
+                                </small>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="waiting_external_note">Комментарий к ожиданию</label>
+                        <input type="text" id="waiting_external_note" name="waiting_external_note" class="form-control"
+                               placeholder="Например: ждём ответ из школы…"
+                               value="{{ correspondence.waiting_external_note if correspondence and correspondence.waiting_external_note else '' }}">
+                    </div>
+                    
+                    <div class="form-divider">Дополнительные сведения</div>
+                    
+                    <div class="form-group">
+                        <label for="sent_info">Исходящая информация</label>
+                        <input type="text" id="sent_info" name="sent_info" class="form-control" 
+                               value="{{ correspondence.sent_info if correspondence else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="to_whom">Адресат</label>
+                        <input type="text" id="to_whom" name="to_whom" class="form-control" 
+                               value="{{ correspondence.to_whom if correspondence else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="control">Контроль исполнения</label>
+                        <input type="text" id="control" name="control" class="form-control" 
+                               value="{{ correspondence.control if correspondence else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="report_date">Дата отчета</label>
+                        <input type="date" id="report_date" name="report_date" class="form-control" 
+                               value="{{ correspondence.report_date.strftime('%Y-%m-%d') if correspondence and correspondence.report_date else '' }}">
+                    </div>
+                    
+                    <div class="form-divider">Запросные данные</div>
+                    
+                    <div class="form-group">
+                        <label for="request_type">Тип запроса</label>
+                        <select id="request_type" name="request_type" class="form-control">
+                            <option value="">Не является запросом</option>
+                            {% for rt in request_types %}
+                            <option value="{{ rt.value }}" {% if correspondence and correspondence.request_type and correspondence.request_type.value == rt.value %}selected{% endif %}>
+                                {{ rt.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="form-hint">Отметьте, если документ относится к запросной корреспонденции</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="request_note">Примечание к запросу</label>
+                        <textarea id="request_note" name="request_note" class="form-control" rows="3" placeholder="Дополнительная информация для отчетности...">{{ correspondence.request_note if correspondence else '' }}</textarea>
+                        <span class="form-hint">Заполняется при необходимости для уточнения данных запроса</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-divider" style="margin-top: 1.5rem;">📄 Результат исполнения</div>
+            
+            <div class="form-group">
+                <textarea id="report" name="report" class="report-textarea" rows="12" 
+                    placeholder="Введите подробный отчет о результате исполнения...">{{ correspondence.report if correspondence else '' }}</textarea>
+                <span class="form-hint">Увеличенное поле для удобного ввода подробных отчетов</span>
+            </div>
+
+            <div class="form-divider" style="margin-top: 1.5rem;">Связь с другим документом</div>
+
+            {% if existing_links %}
+            <div class="existing-links" style="margin-bottom: 1rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 0.5rem;">Уже связанные</div>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% for link in existing_links %}
+                    <li style="padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-md); font-size: 0.8rem;">
+                        <strong>{{ link_types.get(link.link_type, link.link_type) if link_types is defined else link.link_type }}</strong>
+                        —
+                        {% if link.target_id and link.target %}
+                        <a href="/api/correspondences/{{ link.target.id }}">№ {{ link.target.incoming_number }}</a>
+                        <span style="color: var(--text-muted);"> · {{ link.target.sender }}</span>
+                        {% else %}
+                        внешний: № {{ link.external_number }}{% if link.external_sender %} · {{ link.external_sender }}{% endif %}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <span class="form-hint" style="margin-top: 0.4rem;">Ниже можно добавить ещё одну связь</span>
+            </div>
+            {% endif %}
+
+            <div class="link-panel" style="padding: 1rem; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-md); margin-bottom: 0.5rem;">
+                <div class="form-group">
+                    <label>Тип связи</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.35rem;">
+                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: none; letter-spacing: normal; font-weight: 450; color: var(--text-secondary); cursor: pointer;">
+                            <input type="radio" name="link_mode" value="none" checked onchange="toggleLinkMode()"> Не связывать
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: none; letter-spacing: normal; font-weight: 450; color: var(--text-secondary); cursor: pointer;">
+                            <input type="radio" name="link_mode" value="platform" onchange="toggleLinkMode()"> Письмо на платформе
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; text-transform: none; letter-spacing: normal; font-weight: 450; color: var(--text-secondary); cursor: pointer;">
+                            <input type="radio" name="link_mode" value="external" onchange="toggleLinkMode()"> Внешние реквизиты
+                        </label>
+                    </div>
+                    <span class="form-hint">Если связанного письма ещё нет в системе — укажите его реквизиты вручную</span>
+                </div>
+
+                <div id="linkPlatformFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="linked_correspondence_id">Связанное письмо</label>
+                        <select id="linked_correspondence_id" name="linked_correspondence_id" class="form-control">
+                            <option value="">Выберите документ…</option>
+                            {% for opt in link_options|default([]) %}
+                            <option value="{{ opt.id }}">
+                                № {{ opt.incoming_number }} — {{ opt.sender }}{% if opt.incoming_date %} ({{ opt.incoming_date.strftime('%d.%m.%Y') }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div id="linkExternalFields" style="display: none;">
+                    <div class="form-grid" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <label for="external_number">Номер документа</label>
+                            <input type="text" id="external_number" name="external_number" class="form-control" placeholder="Например: 45/12-34">
+                        </div>
+                        <div class="form-group">
+                            <label for="external_date">Дата документа</label>
+                            <input type="date" id="external_date" name="external_date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="external_sender">Отправитель</label>
+                            <input type="text" id="external_sender" name="external_sender" class="form-control" placeholder="Организация / ФИО">
+                        </div>
+                        <div class="form-group">
+                            <label for="external_note">Примечание</label>
+                            <input type="text" id="external_note" name="external_note" class="form-control" placeholder="Где хранится, краткий контекст…">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="linkCommonFields" style="display: none;">
+                    <div class="form-grid" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <label for="link_type">Характер связи</label>
+                            <select id="link_type" name="link_type" class="form-control">
+                                {% for key, label in (link_types or {}).items() %}
+                                <option value="{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="link_note">Комментарий к связи</label>
+                            <input type="text" id="link_note" name="link_note" class="form-control" placeholder="Опционально">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if is_edit %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Сохранить изменения
+                    {% else %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Создать документ
+                    {% endif %}
+                </button>
+                <a href="{{ '/api/correspondences/' + correspondence.id|string if is_edit else '/api/correspondences/' }}" class="btn-cancel">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Отменить
+                </a>
+            </div>
+        </form>
+
+        {% if is_edit and correspondence %}
+        <div class="email-send-panel" id="emailSendPanel">
+            <div class="email-send-head">
+                <h3>Отправить на почту</h3>
+                <p>Уйдёт карточка письма целиком. Связанные файлы подтянутся сами; при необходимости можно добавить ещё один или отправить без вложений.</p>
+            </div>
+
+            {% if email_sent %}
+            <div class="email-flash email-flash-ok">Письмо отправлено на {{ email_to }}</div>
+            {% endif %}
+            {% if email_error %}
+            <div class="email-flash email-flash-err">
+                {% if email_error == 'smtp' %}SMTP не настроен — проверьте .env
+                {% elif email_error == 'invalid_email' %}Укажите корректный email
+                {% elif email_error == 'bad_file' %}Допустимы: pdf, jpg, jpeg, png, txt, doc, docx, xls, xlsx
+                {% elif email_error == 'too_large' %}Файл больше 15 МБ
+                {% elif email_error == 'send_failed' %}Не удалось отправить — проверьте SMTP
+                {% else %}Ошибка отправки{% endif %}
+            </div>
+            {% endif %}
+
+            {% if not smtp_configured|default(false) %}
+            <div class="email-flash email-flash-err">SMTP не настроен. Добавьте SMTP_* в .env, чтобы отправлять письма.</div>
+            {% else %}
+            <form action="/api/correspondences/{{ correspondence.id }}/send-email" method="POST" enctype="multipart/form-data" class="email-send-form">
+                <div class="email-mode-row">
+                    <label class="email-mode">
+                        <input type="radio" name="send_mode" value="self" checked onchange="toggleEmailRecipient()">
+                        Себе ({{ current_user.email }})
+                    </label>
+                    <label class="email-mode">
+                        <input type="radio" name="send_mode" value="custom" onchange="toggleEmailRecipient()">
+                        Другой адрес
+                    </label>
+                </div>
+                <input type="hidden" name="send_to_self" id="send_to_self" value="1">
+                <div class="form-group" id="customEmailGroup" style="display: none;">
+                    <label for="recipient_email">Email получателя</label>
+                    <input type="email" id="recipient_email" name="recipient_email" class="form-control" placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="personal_note">Комментарий к письму</label>
+                    <textarea id="personal_note" name="personal_note" class="form-control" rows="2" placeholder="Необязательно — появится вверху email"></textarea>
+                </div>
+
+                {% if letter_attachments %}
+                <div class="form-group">
+                    <label>Файлы письма</label>
+                    <div class="linked-files-box">
+                        <label class="email-mode" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" name="include_linked" value="1" checked>
+                            Приложить связанные файлы ({{ letter_attachments|length }})
+                        </label>
+                        <ul class="linked-files-list">
+                            {% for att in letter_attachments %}
+                            <li>
+                                <span>{{ att.filename }}</span>
+                                {% if att.size_bytes %}
+                                <span class="linked-file-size">{{ (att.size_bytes / 1024)|round(1) }} КБ</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="include_linked" value="0">
+                <div class="form-group">
+                    <p style="margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                        У письма пока нет связанных файлов — можно приложить вручную или отправить без вложения.
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="email_attachment">{% if letter_attachments %}Дополнительный файл{% else %}Вложение{% endif %}</label>
+                    <input type="file" id="email_attachment" name="attachment" class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png,.txt,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">
+                        {% if letter_attachments %}
+                        Необязательно. Связанные файлы письма уйдут автоматически, если галочка включена.
+                        {% else %}
+                        Необязательно. pdf, jpg, png, word, excel, txt — до 15 МБ суммарно.
+                        {% endif %}
+                    </small>
+                </div>
+                <button type="submit" class="btn-submit btn-email-send">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    Отправить письмо
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleLinkMode() {
+    const mode = document.querySelector('input[name="link_mode"]:checked')?.value || 'none';
+    const platform = document.getElementById('linkPlatformFields');
+    const external = document.getElementById('linkExternalFields');
+    const common = document.getElementById('linkCommonFields');
+    if (platform) platform.style.display = mode === 'platform' ? 'block' : 'none';
+    if (external) external.style.display = mode === 'external' ? 'block' : 'none';
+    if (common) common.style.display = (mode === 'platform' || mode === 'external') ? 'block' : 'none';
+}
+function toggleEmailRecipient() {
+    const mode = document.querySelector('input[name="send_mode"]:checked')?.value || 'self';
+    const group = document.getElementById('customEmailGroup');
+    const flag = document.getElementById('send_to_self');
+    if (group) group.style.display = mode === 'custom' ? 'block' : 'none';
+    if (flag) flag.value = mode === 'self' ? '1' : '0';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleLinkMode();
+    toggleEmailRecipient();
+});
+</script>
+{% endblock %}

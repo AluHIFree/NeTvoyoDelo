@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Потоки документов | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.75rem;
+    }
+    
+    .page-title {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.3px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .page-description {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    
+    .flows-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    
+    .flow-folder {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        padding: 1.25rem;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .flow-folder::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary);
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .flow-folder:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-light);
+    }
+    
+    .flow-folder:hover::before {
+        opacity: 1;
+    }
+    
+    .folder-icon {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .folder-icon svg {
+        width: 36px;
+        height: 36px;
+        stroke: var(--primary);
+    }
+    
+    .folder-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.2px;
+    }
+    
+    .progress-section {
+        margin: 1rem 0;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: var(--border-light);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 3px;
+        transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    
+    .progress-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    
+    .folder-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding-top: 0.875rem;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .stat-badge {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.3;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-number-completed {
+        color: var(--success);
+    }
+    
+    .stat-number-progress {
+        color: var(--warning);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+    }
+    
+    .empty-state svg {
+        width: 56px;
+        height: 56px;
+        stroke: var(--text-muted);
+        opacity: 0.4;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state .hint {
+        font-size: 0.7rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-light);
+        color: var(--text-muted);
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .flows-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.2rem;
+        }
+        
+        .flow-folder {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Потоки документов</h1>
+    <p class="page-description">Группировка корреспонденции по потокам делопроизводства</p>
+</div>
+
+{% if flows %}
+<div class="flows-grid">
+    {% for flow in flows %}
+    <a href="/flows/{{ flow.name }}" class="flow-folder">
+        <div class="folder-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <div class="folder-name">{{ flow.name }}</div>
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ flow.progress_percent }}%;"></div>
+            </div>
+            <div class="progress-stats">
+                <span>Выполнение</span>
+                <span>{{ "%.1f"|format(flow.progress_percent) }}%</span>
+            </div>
+        </div>
+        
+        <div class="folder-stats">
+            <div class="stat-badge">
+                <div class="stat-number">{{ flow.total }}</div>
+                <div class="stat-label">Всего</div>
+            </div>
+            <div class="stat-badge">
+                <div class="stat-number stat-number-completed">{{ flow.completed }}</div>
+                <div class="stat-label">Исполнено</div>
+            </div>
+            <div class="stat-badge">
+                <div class="stat-number stat-number-progress">{{ flow.in_progress }}</div>
+                <div class="stat-label">В работе</div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    <h4>Нет активных потоков</h4>
+    <p>В системе отсутствуют документы, сгруппированные по потокам</p>
+    <div class="hint">
+        Поток формируется автоматически на основе номера документа (например, 642/07-25)
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,715 @@
+{% extends "base.html" %}
+
+{% block title %}Карточка сотрудника: {{ target_user.full_name if target_user else 'Новый пользователь' }} | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.75rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .page-header h1 svg {
+        width: 28px;
+        height: 28px;
+        stroke: var(--primary);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    .info-section {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        padding: 1.25rem;
+    }
+    
+    .info-section h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 0.3rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.55rem 0.85rem;
+        background: var(--bg-main);
+        border: 1.5px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: var(--transition);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+    
+    select.form-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.85rem center;
+        background-size: 1rem;
+    }
+    
+    .stats-grid-small {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .stat-card-small {
+        background: var(--primary-bg);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        text-align: center;
+        border: 1px solid var(--border-light);
+    }
+    
+    .stat-number-small {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.2;
+    }
+    
+    .stat-label-small {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--text-muted);
+    }
+    
+    .badge-active {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .badge-blocked {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .badge-admin {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+    
+    .badge-user {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--border-light);
+        color: var(--text-muted);
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-warning {
+        background: var(--warning);
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: var(--accent-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #057a55;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+    
+    .btn-back {
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+    }
+    
+    .btn-back:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .alert-warning {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        border-left: 3px solid #d97706;
+    }
+    
+    .alert-danger {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        border-left: 3px solid #dc2626;
+        font-size: 0.8rem;
+    }
+    
+    /* Стили для графиков */
+    .chart-container {
+        margin: 1rem 0;
+        padding: 0.5rem;
+    }
+    
+    .chart-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.75rem;
+        text-align: center;
+    }
+    
+    .donut-chart {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+    
+    .donut-chart svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+    
+    .donut-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .donut-percent {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .donut-label {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+    }
+    
+    .progress-bar-container {
+        background: var(--border-light);
+        border-radius: 4px;
+        height: 8px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-fill-primary { background: var(--primary); }
+    .progress-fill-success { background: var(--success); }
+    .progress-fill-warning { background: var(--warning); }
+    
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .stat-row-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .stat-row-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            justify-content: center;
+        }
+        
+        .stats-grid-small {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+        </svg>
+        {{ target_user.full_name if target_user else 'Новый сотрудник' }}
+    </h1>
+</div>
+
+{% if target_user %}
+{% set completion_rate = (stats.completed_count / stats.assigned_count * 100)|round(1) if stats.assigned_count > 0 else 0 %}
+{% set creation_rate = (stats.created_count / (stats.created_count + 1) * 100)|round(1) %}
+{% set transfer_rate = (stats.transferred_by_count / (stats.transferred_by_count + stats.transferred_to_count + 1) * 100)|round(1) %}
+
+<div class="info-grid">
+    <!-- Информация о пользователе -->
+    <div class="info-section">
+        <h3>Личные данные</h3>
+        
+        {% if error %}
+        <div class="alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <form action="/admin/users/{{ target_user.id }}/update" method="POST">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" value="{{ target_user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" name="username" class="form-control" value="{{ target_user.username }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Полное имя</label>
+                <input type="text" name="full_name" class="form-control" value="{{ target_user.full_name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Отдел</label>
+                <select name="department" class="form-control">
+                    {% for dept in departments %}
+                    {% set dept_name = dept if dept is string else dept.name %}
+                    <option value="{{ dept_name }}" {% if target_user.department == dept_name %}selected{% endif %}>{{ dept_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Роль</label>
+                <select name="role" class="form-control">
+                    <option value="executor" {% if target_user.role == 'executor' %}selected{% endif %}>Исполнитель</option>
+                    <option value="controller" {% if target_user.role == 'controller' %}selected{% endif %}>Контролёр</option>
+                    <option value="viewer" {% if target_user.role == 'viewer' %}selected{% endif %}>Наблюдатель</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Телефон</label>
+                <input type="tel" name="phone_number" class="form-control" value="{{ target_user.phone_number or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label>Статус</label>
+                <div>
+                    {% if target_user.is_active %}
+                    <span class="badge-active">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Активен
+                    </span>
+                    {% else %}
+                    <span class="badge-blocked">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Заблокирован
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Права администратора</label>
+                <div>
+                    {% if target_user.is_admin %}
+                    <span class="badge-admin">Администратор</span>
+                    {% else %}
+                    <span class="badge-user">Сотрудник</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <button type="submit" class="btn-action btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Статистика и графики -->
+    <div class="info-section">
+        <h3>Ключевые показатели</h3>
+        
+        <div class="stats-grid-small">
+            <div class="stat-card-small">
+                <div class="stat-number-small">{{ stats.assigned_count }}</div>
+                <div class="stat-label-small">Назначено</div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-number-small">{{ stats.completed_count }}</div>
+                <div class="stat-label-small">Выполнено</div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-number-small">{{ stats.created_count }}</div>
+                <div class="stat-label-small">Создано</div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-number-small">{{ stats.transferred_to_count }}</div>
+                <div class="stat-label-small">Получено</div>
+            </div>
+        </div>
+        
+        <!-- Круговая диаграмма эффективности -->
+        <div class="chart-container">
+            <div class="chart-title">Эффективность исполнения</div>
+            <div class="donut-chart">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-light)" stroke-width="10"/>
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="var(--success)" stroke-width="10"
+                            stroke-dasharray="{{ (completion_rate * 2.83)|round }} 283"
+                            stroke-dashoffset="0"
+                            stroke-linecap="round"/>
+                </svg>
+                <div class="donut-center">
+                    <div class="donut-percent">{{ completion_rate }}%</div>
+                    <div class="donut-label">выполнено</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Детальная статистика -->
+        <div class="stat-row">
+            <span class="stat-row-label">Прогресс выполнения</span>
+            <span class="stat-row-value">{{ stats.completed_count }} / {{ stats.assigned_count }}</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-fill progress-fill-success" style="width: {{ completion_rate }}%"></div>
+        </div>
+        
+        <div class="stat-row">
+            <span class="stat-row-label">Активность в системе</span>
+            <span class="stat-row-value">{{ stats.created_count }} документов создано</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-fill progress-fill-primary" style="width: {{ creation_rate }}%"></div>
+        </div>
+        
+        <div class="stat-row">
+            <span class="stat-row-label">Участие в передачах</span>
+            <span class="stat-row-value">{{ stats.transferred_by_count }} передано / {{ stats.transferred_to_count }} получено</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-fill progress-fill-warning" style="width: {{ transfer_rate }}%"></div>
+        </div>
+        
+        <h3 style="margin-top: 1.25rem;">Управление доступом</h3>
+        <div class="action-buttons">
+            {% if target_user.is_active %}
+            <form action="/admin/users/{{ target_user.id }}/block" method="POST" 
+                  onsubmit="return confirm('Заблокировать пользователя {{ target_user.full_name }}?')">
+                <button type="submit" class="btn-action btn-warning">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Заблокировать
+                </button>
+            </form>
+            {% else %}
+            <form action="/admin/users/{{ target_user.id }}/unblock" method="POST">
+                <button type="submit" class="btn-action btn-success">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/>
+                    </svg>
+                    Разблокировать
+                </button>
+            </form>
+            {% endif %}
+            
+            {% if not target_user.is_admin %}
+            <form action="/admin/users/{{ target_user.id }}/make-admin" method="POST">
+                <button type="submit" class="btn-action btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Назначить админом
+                </button>
+            </form>
+            {% else %}
+            {% if current_user.id != target_user.id %}
+            <form action="/admin/users/{{ target_user.id }}/remove-admin" method="POST"
+                  onsubmit="return confirm('Снять права администратора с {{ target_user.full_name }}?')">
+                <button type="submit" class="btn-action btn-warning">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Снять права админа
+                </button>
+            </form>
+            {% endif %}
+            {% endif %}
+            
+            {% if current_user.id != target_user.id %}
+            <form action="/admin/users/{{ target_user.id }}/delete" method="POST"
+                  onsubmit="return confirm('Удалить пользователя {{ target_user.full_name }}? Все его письма будут переназначены администратору!')">
+                <button type="submit" class="btn-action btn-danger">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Удалить
+                </button>
+            </form>
+            {% else %}
+            <div class="alert-warning" style="margin-top: 0.5rem;">
+                ⚠️ Вы не можете удалить или изменить права администратора для собственной учетной записи
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 1.5rem;">
+    <a href="/admin/users" class="btn-action btn-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Вернуться к списку сотрудников
+    </a>
+</div>
+
+{% else %}
+<!-- Форма создания нового пользователя -->
+<div class="info-section">
+    <h3>Новый сотрудник</h3>
+    
+    {% if error %}
+    <div class="alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form action="/admin/users/create" method="POST">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Логин</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Полное имя</label>
+            <input type="text" name="full_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Пароль</label>
+            <div class="password-field">
+                <input type="password" name="password" class="form-control" required data-password-toggle>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Отдел</label>
+            <select name="department" class="form-control" required>
+                <option value="">Выберите отдел</option>
+                {% for dept in departments %}
+                {% set dept_name = dept if dept is string else dept.name %}
+                <option value="{{ dept_name }}">{{ dept_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Роль</label>
+            <select name="role" class="form-control">
+                <option value="executor">Исполнитель</option>
+                <option value="controller">Контролёр</option>
+                <option value="viewer">Наблюдатель</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Телефон</label>
+            <input type="tel" name="phone_number" class="form-control" placeholder="+7 (XXX) XXX-XX-XX">
+        </div>
+        <div class="form-group">
+            <label class="form-checkbox">
+                <input type="checkbox" name="is_admin" value="true"> Назначить администратором
+            </label>
+        </div>
+        <div style="margin-top: 1rem;">
+            <button type="submit" class="btn-action btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Создать учетную запись
+            </button>
+        </div>
+    </form>
+</div>
+
+<div style="margin-top: 1.5rem;">
+    <a href="/admin/users" class="btn-action btn-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Вернуться к списку сотрудников
+    </a>
+</div>
+{% endif %}
+
+<script>
+    // Анимация прогресс-баров при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    });
+</script>
+{% endblock %}

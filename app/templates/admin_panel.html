@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора | NeTvoyoDelo Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { margin-bottom: 1.75rem; }
+    .page-header h1 {
+        font-size: 1.5rem; font-weight: 600; color: var(--text-primary);
+        margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.75rem;
+        letter-spacing: -0.3px;
+    }
+    .page-header h1 svg { width: 28px; height: 28px; stroke: var(--primary); }
+    .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+
+    .analytics-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .analytics-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .analytics-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 1.25rem;
+        background: var(--primary-bg);
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .analytics-section-header h2 {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .analytics-section-header h2 svg {
+        width: 16px; height: 16px; stroke: var(--primary); flex-shrink: 0;
+    }
+
+    .analytics-section-header .section-meta {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .analytics-section-body { padding: 1.25rem; }
+
+    .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .metric {
+        padding: 1rem 1.1rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        min-width: 0;
+    }
+
+    .metric-value {
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.35rem;
+    }
+
+    .metric-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+        color: var(--text-muted);
+    }
+
+    .metric-hint {
+        margin-top: 0.45rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .metric-hint.positive { color: var(--success); }
+    .metric-hint.negative { color: var(--danger); }
+    .metric-hint.neutral { color: var(--warning); }
+
+    .dept-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.85rem;
+    }
+
+    .dept-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--primary);
+    }
+
+    .dept-item-name {
+        font-size: 0.85rem;
+        font-weight: 560;
+        color: var(--text-primary);
+        line-height: 1.3;
+        min-width: 0;
+        word-break: break-word;
+    }
+
+    .dept-item-count {
+        flex-shrink: 0;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-bg);
+        color: var(--primary);
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .dept-empty {
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .btn-admin {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .btn-admin:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+        border-color: var(--primary-light);
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+
+    .btn-admin svg { flex-shrink: 0; }
+
+    @media (max-width: 900px) {
+        .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+        .metrics-row { grid-template-columns: 1fr; }
+        .analytics-section-header { flex-direction: column; align-items: flex-start; }
+        .page-header h1 { font-size: 1.25rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Аналитический центр
+    </h1>
+    <p>Сводная статистика и управление системой документооборота</p>
+</div>
+
+<div class="analytics-layout">
+    <!-- Пользователи -->
+    <section class="analytics-section">
+        <div class="analytics-section-header">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Пользователи
+            </h2>
+            <span class="section-meta">{{ stats.total_users }} аккаунтов</span>
+        </div>
+        <div class="analytics-section-body">
+            <div class="metrics-row">
+                <div class="metric">
+                    <div class="metric-value">{{ stats.total_users }}</div>
+                    <div class="metric-label">Всего</div>
+                    <div class="metric-hint">Аккаунтов в системе</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ stats.active_users }}</div>
+                    <div class="metric-label">Активные</div>
+                    <div class="metric-hint positive">Действующие учётные записи</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ stats.blocked_users }}</div>
+                    <div class="metric-label">Заблокированы</div>
+                    <div class="metric-hint negative">Доступ ограничен</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ stats.admin_count }}</div>
+                    <div class="metric-label">Администраторы</div>
+                    <div class="metric-hint">Полные права доступа</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Отделы — все динамически -->
+    <section class="analytics-section">
+        <div class="analytics-section-header">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H4a2 2 0 0 1-2-2z"/>
+                </svg>
+                Организационная структура
+            </h2>
+            <span class="section-meta">
+                {% if stats.by_department %}{{ stats.by_department|length }} отдел{{ 'ов' if stats.by_department|length >= 5 else ('а' if stats.by_department|length >= 2 else '') }}{% else %}нет отделов{% endif %}
+            </span>
+        </div>
+        <div class="analytics-section-body">
+            {% if stats.by_department %}
+            <div class="dept-grid">
+                {% for name, count in stats.by_department.items() %}
+                <div class="dept-item">
+                    <span class="dept-item-name">{{ name }}</span>
+                    <span class="dept-item-count" title="Пользователей в отделе">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="dept-empty">Отделы ещё не добавлены. <a href="/admin/departments">Добавить в справочник</a></div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Документооборот -->
+    <section class="analytics-section">
+        <div class="analytics-section-header">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Документооборот
+            </h2>
+            <span class="section-meta">{{ stats.total_correspondences }} документов</span>
+        </div>
+        <div class="analytics-section-body">
+            <div class="metrics-row">
+                <div class="metric">
+                    <div class="metric-value">{{ stats.total_correspondences }}</div>
+                    <div class="metric-label">Всего документов</div>
+                    <div class="metric-hint">Единиц в реестре</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ stats.completed_correspondences }}</div>
+                    <div class="metric-label">Исполнено</div>
+                    <div class="metric-hint positive">Документов закрыто</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ stats.pending_correspondences }}</div>
+                    <div class="metric-label">В работе</div>
+                    <div class="metric-hint neutral">Ожидают исполнения</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ ((stats.completed_correspondences / stats.total_correspondences * 100) if stats.total_correspondences > 0 else 0) | round(1) }}%</div>
+                    <div class="metric-label">Эффективность</div>
+                    <div class="metric-hint">Процент исполнения</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Управление -->
+    <section class="analytics-section">
+        <div class="analytics-section-header">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Управление системой
+            </h2>
+        </div>
+        <div class="analytics-section-body">
+            <div class="action-buttons">
+                <a href="/admin/users" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Пользователи
+                </a>
+                <a href="/admin/departments" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H4a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    Отделы
+                </a>
+                <a href="/api/correspondences/" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M4 4h16v16H4z"/>
+                        <path d="M8 8h8M8 12h6M8 16h4"/>
+                    </svg>
+                    Реестр документов
+                </a>
+                <a href="/api/correspondences/links" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/>
+                        <path d="M8.5 8.5l7 7"/>
+                    </svg>
+                    Связи писем
+                </a>
+                <a href="/api/correspondences/export" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M12 3v12m0 0-3-3m3 3 3-3M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>
+                    </svg>
+                    Экспорт
+                </a>
+                <a href="/admin/reports" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 20V10M12 20V4M6 20v-6"/>
+                    </svg>
+                    Отчёты
+                </a>
+                <a href="/notifications/check" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    Уведомления
+                </a>
+                <a href="/admin/delivery-logs" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                    Логи доставки
+                </a>
+                <a href="/updates/" class="btn-admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                        <path d="M16 16h5v5"/>
+                    </svg>
+                    Обновления
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

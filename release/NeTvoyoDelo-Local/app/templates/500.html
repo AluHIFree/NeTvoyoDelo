@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Ошибка сервера | NeTvoyoDelo{% endblock %}
+{% block content %}
+<div style="max-width: 480px; margin: 4rem auto; text-align: center; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+    <p style="margin: 0 0 0.5rem; font-family: var(--font-mono); font-size: 2.5rem; font-weight: 500; color: var(--danger); letter-spacing: -0.04em;">500</p>
+    <h1 style="margin: 0 0 0.5rem; font-size: 1.15rem; font-weight: 600;">Внутренняя ошибка сервера</h1>
+    <p style="margin: 0 0 1.25rem; font-size: 0.875rem; color: var(--text-muted);">Произошла непредвиденная ошибка. Попробуйте позже или обратитесь к администратору.</p>
+    {% if error %}
+    <div style="text-align: left; margin-bottom: 1.25rem; padding: 0.75rem 0.9rem; background: var(--danger-muted); border: 1px solid rgba(155,44,44,0.25); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--danger); font-family: var(--font-mono); word-break: break-word;">{{ error }}</div>
+    {% endif %}
+    <a href="/" class="btn-action btn-primary" style="display: inline-flex;">На главную</a>
+</div>
+{% endblock %}

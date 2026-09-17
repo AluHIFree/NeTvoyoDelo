@@ -1,0 +1,567 @@
+{% extends "base.html" %}
+
+{% block title %}Связи писем | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .page-title {
+        font-size: 1.35rem; font-weight: 600; color: var(--text-primary);
+        margin: 0 0 0.25rem; letter-spacing: -0.025em;
+    }
+    .page-description { color: var(--text-muted); font-size: 0.8rem; margin: 0; }
+
+    .links-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1rem;
+        min-height: 620px;
+    }
+
+    .graph-shell {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+        min-height: 620px;
+    }
+
+    .graph-toolbar {
+        position: absolute;
+        top: 0.85rem;
+        left: 0.85rem;
+        right: 0.85rem;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    .graph-toolbar > * { pointer-events: auto; }
+
+    .graph-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.7rem;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        backdrop-filter: blur(6px);
+    }
+
+    [data-theme="dark"] .graph-chip {
+        background: rgba(30, 41, 59, 0.92);
+    }
+
+    .graph-btn {
+        padding: 0.35rem 0.7rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .graph-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    #graphCanvas {
+        width: 100%;
+        height: 100%;
+        min-height: 620px;
+        display: block;
+        cursor: grab;
+        background:
+            radial-gradient(ellipse at 20% 10%, rgba(26, 76, 140, 0.07), transparent 45%),
+            radial-gradient(ellipse at 80% 90%, rgba(26, 76, 140, 0.05), transparent 40%),
+            var(--bg-card);
+    }
+    #graphCanvas:active { cursor: grabbing; }
+
+    .side-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 620px;
+    }
+
+    .side-panel-header {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--primary-bg);
+    }
+    .side-panel-header h2 {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-primary);
+    }
+    .side-panel-body {
+        padding: 1rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .empty-hint {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .meta-block { margin-bottom: 1rem; }
+    .meta-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    .meta-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        line-height: 1.4;
+        word-break: break-word;
+    }
+    .meta-value.mono {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 560;
+        background: var(--primary-muted);
+        color: var(--primary);
+        border: 1px solid var(--border);
+    }
+    .status-pill.external {
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+    }
+
+    .side-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+    }
+    .side-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.55rem 0.9rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        background: var(--bg-main);
+    }
+    .side-btn.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .side-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .side-btn.primary:hover { background: var(--primary-dark); color: #fff; }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 0.85rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        display: inline-block;
+    }
+    .dot.platform { background: var(--primary); }
+    .dot.external { background: #d97706; border: 2px dashed #d97706; background: transparent; }
+    .dot.edge { width: 18px; height: 2px; border-radius: 0; background: var(--primary-light); }
+
+    .nav-back {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.45rem 0.85rem; border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text-secondary);
+        text-decoration: none; font-size: 0.8rem;
+    }
+    .nav-back:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-muted); }
+
+    @media (max-width: 960px) {
+        .links-layout { grid-template-columns: 1fr; }
+        .side-panel { min-height: auto; }
+        .graph-shell, #graphCanvas { min-height: 480px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Связи писем</h1>
+        <p class="page-description">Карта смысловых связей между документами — как нейронная сеть корреспонденции</p>
+        <div class="legend">
+            <span><i class="dot platform"></i> Письмо на платформе</span>
+            <span><i class="dot external"></i> Внешние реквизиты</span>
+            <span><i class="dot edge"></i> Связь</span>
+            <span>{{ link_count }} связей в системе</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="/api/correspondences/" class="nav-back">← Реестр</a>
+        <a href="/api/correspondences/create" class="nav-back" style="border-color: var(--primary); color: var(--primary);">+ Документ</a>
+    </div>
+</div>
+
+<div class="links-layout">
+    <div class="graph-shell">
+        <div class="graph-toolbar">
+            <span class="graph-chip" id="graphStatus">Загрузка…</span>
+            <button type="button" class="graph-btn" id="btnFit">По центру</button>
+            <button type="button" class="graph-btn" id="btnRelayout">Перестроить</button>
+        </div>
+        <canvas id="graphCanvas"></canvas>
+    </div>
+
+    <aside class="side-panel">
+        <div class="side-panel-header">
+            <h2>Карточка узла</h2>
+        </div>
+        <div class="side-panel-body" id="nodeDetails">
+            <p class="empty-hint">Кликните по узлу на графе, чтобы увидеть реквизиты документа, статус и перейти к карточке.</p>
+            <p class="empty-hint" style="margin-top: 0.75rem;">Тяните холст мышью, колёсиком — масштаб. Узлы можно перетаскивать.</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('graphStatus');
+    const detailsEl = document.getElementById('nodeDetails');
+    const focusId = {{ focus_id|tojson if focus_id else 'null' }};
+
+    let nodes = [];
+    let edges = [];
+    let nodeMap = {};
+    let selected = null;
+    let dragging = null;
+    let panning = false;
+    let panX = 0, panY = 0;
+    let scale = 1;
+    let lastX = 0, lastY = 0;
+    let animId = null;
+    let simTicks = 0;
+
+    function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function statusColor(status) {
+        if (!status) return '#64748b';
+        if (status.includes('Исполнено')) return '#059669';
+        if (status.includes('Просрочено')) return '#dc2626';
+        if (status.includes('работе')) return '#1a4c8c';
+        if (status.includes('Внешний')) return '#d97706';
+        return '#64748b';
+    }
+
+    function layout() {
+        const w = canvas.clientWidth || 800;
+        const h = canvas.clientHeight || 600;
+        const cx = w / 2, cy = h / 2;
+        const n = nodes.length || 1;
+        nodes.forEach((node, i) => {
+            const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+            const r = Math.min(w, h) * 0.28 + (i % 3) * 28;
+            node.x = cx + Math.cos(angle) * r;
+            node.y = cy + Math.sin(angle) * r;
+            node.vx = 0;
+            node.vy = 0;
+        });
+        simTicks = 180;
+    }
+
+    function tick() {
+        if (simTicks <= 0) return;
+        simTicks--;
+        const k = 0.012;
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const a = nodes[i], b = nodes[j];
+                let dx = a.x - b.x, dy = a.y - b.y;
+                let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const force = 2200 / (dist * dist);
+                dx = (dx / dist) * force;
+                dy = (dy / dist) * force;
+                a.vx += dx; a.vy += dy;
+                b.vx -= dx; b.vy -= dy;
+            }
+        }
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a || !b) return;
+            let dx = b.x - a.x, dy = b.y - a.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = (dist - 140) * k;
+            dx = (dx / dist) * force;
+            dy = (dy / dist) * force;
+            a.vx += dx; a.vy += dy;
+            b.vx -= dx; b.vy -= dy;
+        });
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        nodes.forEach(n => {
+            if (dragging && dragging.id === n.id) return;
+            n.vx *= 0.82; n.vy *= 0.82;
+            n.x += n.vx; n.y += n.vy;
+            n.x = Math.max(40, Math.min(w - 40, n.x));
+            n.y = Math.max(40, Math.min(h - 40, n.y));
+        });
+    }
+
+    function draw() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(panX, panY);
+        ctx.scale(scale, scale);
+
+        edges.forEach(e => {
+            const a = nodeMap[e.source], b = nodeMap[e.target];
+            if (!a || !b) return;
+            const active = selected && (selected.id === a.id || selected.id === b.id);
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = active ? 'rgba(26,76,140,0.75)' : 'rgba(100,116,139,0.35)';
+            ctx.lineWidth = active ? 2.2 : 1.4;
+            ctx.stroke();
+
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            ctx.fillStyle = active ? '#1a4c8c' : '#94a3b8';
+            ctx.font = '10px Source Sans 3, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(e.type_label || '', mx, my - 6);
+        });
+
+        nodes.forEach(n => {
+            const r = n.kind === 'external' ? 18 : 22;
+            const isSel = selected && selected.id === n.id;
+            const color = n.kind === 'external' ? '#d97706' : statusColor(n.status);
+
+            if (isSel) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, r + 8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(26,76,140,0.12)';
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+            if (n.kind === 'external') {
+                ctx.setLineDash([4, 3]);
+                ctx.fillStyle = 'rgba(217,119,6,0.12)';
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else {
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.92;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = n.kind === 'external' ? '#92400e' : '#0f172a';
+            ctx.font = '600 11px IBM Plex Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(truncate(n.label, 14), n.x, n.y + r + 14);
+        });
+
+        ctx.restore();
+    }
+
+    function truncate(s, n) {
+        s = String(s || '');
+        return s.length > n ? s.slice(0, n - 1) + '…' : s;
+    }
+
+    function loop() {
+        tick();
+        draw();
+        animId = requestAnimationFrame(loop);
+    }
+
+    function screenToWorld(sx, sy) {
+        return { x: (sx - panX) / scale, y: (sy - panY) / scale };
+    }
+
+    function hitTest(sx, sy) {
+        const p = screenToWorld(sx, sy);
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const n = nodes[i];
+            const r = n.kind === 'external' ? 18 : 22;
+            const dx = p.x - n.x, dy = p.y - n.y;
+            if (dx * dx + dy * dy <= (r + 4) * (r + 4)) return n;
+        }
+        return null;
+    }
+
+    function showDetails(n) {
+        selected = n;
+        if (!n) {
+            detailsEl.innerHTML = '<p class="empty-hint">Кликните по узлу на графе, чтобы увидеть реквизиты документа.</p>';
+            return;
+        }
+        const pillClass = n.kind === 'external' ? 'status-pill external' : 'status-pill';
+        let actions = '';
+        if (n.url) {
+            actions += `<a class="side-btn primary" href="${n.url}">Открыть документ</a>`;
+            actions += `<a class="side-btn" href="${n.url}/edit">Редактировать</a>`;
+            actions += `<a class="side-btn" href="/api/correspondences/links?focus=${n.corr_id}">Фокус на связи</a>`;
+        } else {
+            actions += `<p class="empty-hint">Документ ещё не заведён на платформе. Реквизиты сохранены вручную.</p>`;
+        }
+        detailsEl.innerHTML = `
+            <div class="meta-block"><div class="meta-label">Номер</div><div class="meta-value mono">${escapeHtml(n.label)}</div></div>
+            <div class="meta-block"><div class="meta-label">Статус</div><div class="meta-value"><span class="${pillClass}">${escapeHtml(n.status || '—')}</span></div></div>
+            <div class="meta-block"><div class="meta-label">Отправитель</div><div class="meta-value">${escapeHtml(n.sender || '—')}</div></div>
+            <div class="meta-block"><div class="meta-label">Дата</div><div class="meta-value">${escapeHtml(n.date || '—')}</div></div>
+            ${n.deadline ? `<div class="meta-block"><div class="meta-label">Срок</div><div class="meta-value">${escapeHtml(n.deadline)}</div></div>` : ''}
+            <div class="meta-block"><div class="meta-label">Исполнитель</div><div class="meta-value">${escapeHtml(n.executor || '—')}</div></div>
+            <div class="meta-block"><div class="meta-label">Содержание</div><div class="meta-value">${escapeHtml(n.content || '—')}</div></div>
+            <div class="side-actions">${actions}</div>
+        `;
+    }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function fitView() {
+        if (!nodes.length) return;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        nodes.forEach(n => {
+            minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+            maxX = Math.max(maxX, n.x); maxY = Math.max(maxY, n.y);
+        });
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        const bw = Math.max(maxX - minX, 1), bh = Math.max(maxY - minY, 1);
+        scale = Math.min(1.4, Math.max(0.45, 0.75 * Math.min(w / (bw + 120), h / (bh + 120))));
+        panX = w / 2 - scale * ((minX + maxX) / 2);
+        panY = h / 2 - scale * ((minY + maxY) / 2);
+    }
+
+    canvas.addEventListener('mousedown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+        const hit = hitTest(sx, sy);
+        lastX = e.clientX; lastY = e.clientY;
+        if (hit) {
+            dragging = hit;
+            showDetails(hit);
+        } else {
+            panning = true;
+        }
+    });
+    window.addEventListener('mousemove', e => {
+        const dx = e.clientX - lastX, dy = e.clientY - lastY;
+        lastX = e.clientX; lastY = e.clientY;
+        if (dragging) {
+            dragging.x += dx / scale;
+            dragging.y += dy / scale;
+            dragging.vx = 0; dragging.vy = 0;
+        } else if (panning) {
+            panX += dx; panY += dy;
+        }
+    });
+    window.addEventListener('mouseup', () => { dragging = null; panning = false; });
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        const before = screenToWorld(mx, my);
+        const factor = e.deltaY > 0 ? 0.92 : 1.08;
+        scale = Math.min(2.5, Math.max(0.35, scale * factor));
+        panX = mx - before.x * scale;
+        panY = my - before.y * scale;
+    }, { passive: false });
+
+    document.getElementById('btnFit').addEventListener('click', fitView);
+    document.getElementById('btnRelayout').addEventListener('click', () => { layout(); fitView(); });
+
+    async function load() {
+        resize();
+        statusEl.textContent = 'Загрузка графа…';
+        const url = focusId
+            ? `/api/correspondences/links/data?focus=${focusId}`
+            : '/api/correspondences/links/data';
+        const res = await fetch(url, { credentials: 'same-origin' });
+        const data = await res.json();
+        nodes = (data.nodes || []).map(n => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+        edges = data.edges || [];
+        nodeMap = {};
+        nodes.forEach(n => { nodeMap[n.id] = n; });
+        layout();
+        fitView();
+        statusEl.textContent = `${nodes.length} узлов · ${edges.length} связей`;
+        if (data.focus && nodeMap[data.focus]) showDetails(nodeMap[data.focus]);
+        if (!animId) loop();
+    }
+
+    window.addEventListener('resize', () => { resize(); });
+    load().catch(err => {
+        statusEl.textContent = 'Ошибка загрузки';
+        console.error(err);
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+
+{% block title %}Запросная документация | NeTvoyoDelo Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.75rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .page-header h1 svg {
+        width: 28px;
+        height: 28px;
+        stroke: var(--primary);
+    }
+    
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        padding: 1rem;
+        text-align: center;
+        transition: var(--transition);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .stat-number-own {
+        color: #4338ca;
+    }
+    
+    .stat-number-ministry {
+        color: #d97706;
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+    
+    .filter-select {
+        width: 100%;
+        padding: 0.55rem 1rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+    
+    .btn-filter {
+        padding: 0.55rem 1.25rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        border: none;
+        background: var(--primary);
+        color: white;
+        transition: var(--transition);
+    }
+    
+    .btn-filter:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-reset {
+        padding: 0.55rem 1.25rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    
+    .btn-reset:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        border-radius: var(--radius-md);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-export:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+        transform: translateY(-1px);
+    }
+    
+    .table-container {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+    }
+    
+    .data-table {
+        width: 100%;
+    }
+    
+    .data-table thead tr {
+        background: var(--primary-bg);
+    }
+    
+    .data-table th {
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .data-table td {
+        padding: 0.875rem 1rem;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-light);
+        vertical-align: middle;
+    }
+    
+    .data-table tbody tr {
+        transition: var(--transition);
+    }
+    
+    .data-table tbody tr:hover {
+        background: var(--primary-bg);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .status-completed {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .status-expired {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .status-progress {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    [data-theme='dark'] .status-completed {
+        background: #064e3b;
+        color: #34d399;
+    }
+    
+    [data-theme='dark'] .status-expired {
+        background: #7f1d1d;
+        color: #f87171;
+    }
+    
+    [data-theme='dark'] .status-progress {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+    
+    [data-theme='dark'] .status-pending {
+        background: #78350f;
+        color: #fbbf24;
+    }
+    
+    .request-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .request-own {
+        background: #e0e7ff;
+        color: #4338ca;
+    }
+    
+    .request-ministry {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    [data-theme='dark'] .request-own {
+        background: #2e1065;
+        color: #a78bfa;
+    }
+    
+    [data-theme='dark'] .request-ministry {
+        background: #78350f;
+        color: #fbbf24;
+    }
+    
+    .btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.8rem;
+        background: transparent;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-view:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 2rem;
+    }
+    
+    .empty-state svg {
+        width: 56px;
+        height: 56px;
+        stroke: var(--text-muted);
+        opacity: 0.4;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .request-note {
+        max-width: 220px;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    
+    .letter-number {
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 0.85rem;
+    }
+    
+    .executor-name {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .executor-empty {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-group {
+            width: 100%;
+        }
+        
+        .stats-grid {
+            gap: 0.75rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 0.625rem 0.875rem;
+        }
+        
+        .hide-mobile {
+            display: none;
+        }
+        
+        .page-header h1 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+                    <path d="M16 3v4a1 1 0 0 0 1 1h4"/>
+                </svg>
+                Запросная документация
+            </h1>
+            <p>Отчетность по входящим запросам и обращениям</p>
+        </div>
+        <a href="/requests/export{% if request_type_filter %}?request_type_filter={{ request_type_filter }}{% endif %}" class="btn-export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v12m0 0-3-3m3 3 3-3M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>
+            </svg>
+            Экспорт данных
+        </a>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total }}</div>
+        <div class="stat-label">Всего запросов</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number stat-number-own">{{ own_purposes }}</div>
+        <div class="stat-label">Собственные цели</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number stat-number-ministry">{{ ministry }}</div>
+        <div class="stat-label">Минпросвещения РФ</div>
+    </div>
+</div>
+
+<!-- Фильтр -->
+<div class="filter-bar">
+    <form method="GET" action="/requests/" class="filter-form">
+        <div class="filter-group">
+            <label for="request_type_filter">Тип запроса</label>
+            <select id="request_type_filter" name="request_type_filter" class="filter-select">
+                <option value="">Все типы</option>
+                {% for rt in request_types %}
+                <option value="{{ rt.value }}" {% if request_type_filter == rt.value %}selected{% endif %}>{{ rt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="submit" class="btn-filter">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 0.25rem;">
+                    <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3"/>
+                </svg>
+                Применить
+            </button>
+            {% if request_type_filter %}
+            <a href="/requests/" class="btn-reset">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Сбросить
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Таблица -->
+<div class="table-container">
+    {% if correspondences %}
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 45px;">#</th>
+                    <th>Вх. номер</th>
+                    <th class="hide-mobile">Отправитель</th>
+                    <th>Содержание</th>
+                    <th>Тип</th>
+                    <th class="hide-mobile">Примечание</th>
+                    <th>Исполнитель</th>
+                    <th>Срок</th>
+                    <th>Статус</th>
+                    <th style="width: 80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for corr in correspondences %}
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 500;">{{ loop.index }}</td>
+                    <td><span class="letter-number">{{ corr.incoming_number }}</span></td>
+                    <td class="hide-mobile">{{ corr.sender[:30] }}{% if corr.sender|length > 30 %}…{% endif %}</td>
+                    <td>
+                        <div style="max-width: 200px; white-space: normal; word-break: break-word; line-height: 1.4;">
+                            {{ corr.content[:40] }}{% if corr.content|length > 40 %}…{% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="request-badge {% if corr.request_type.value == 'Для собственных целей' %}request-own{% else %}request-ministry{% endif %}">
+                            {{ 'Собственные' if corr.request_type.value == 'Для собственных целей' else 'Минпросвещения' }}
+                        </span>
+                    </td>
+                    <td class="hide-mobile">
+                        {% if corr.request_note %}
+                        <div class="request-note">{{ corr.request_note[:50] }}{% if corr.request_note|length > 50 %}…{% endif %}</div>
+                        {% else %}
+                        <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if corr.executor %}
+                        <span class="executor-name">{{ corr.executor.full_name.split()[0] }}</span>
+                        {% else %}
+                        <span class="executor-empty">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ corr.deadline.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if corr.status.value == 'Исполнено' %}status-completed
+                            {% elif corr.status.value == 'Просрочено' %}status-expired
+                            {% elif corr.status.value == 'В работе' %}status-progress
+                            {% else %}status-pending{% endif %}">
+                            {{ corr.status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/api/correspondences/{{ corr.id }}" class="btn-view">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Открыть
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+            <path d="M16 3v4a1 1 0 0 0 1 1h4"/>
+        </svg>
+        <h4>Нет запросных документов</h4>
+        <p>Документы, отмеченные как запросы, отсутствуют</p>
+        <p style="font-size: 0.7rem; margin-top: 0.5rem;">При создании документа выберите тип запроса в разделе дополнительных параметров</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

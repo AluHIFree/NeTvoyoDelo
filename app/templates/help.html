@@ -1,0 +1,1057 @@
+{% extends "base.html" %}
+
+{% block title %}Справка и документация | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .docs-wrap {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .docs-nav {
+        position: sticky;
+        top: calc(var(--topbar-h, 58px) + 1rem);
+        max-height: calc(100vh - var(--topbar-h, 58px) - 2rem);
+        overflow: auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 0.85rem 0.75rem;
+        box-shadow: var(--shadow-sm);
+    }
+    .docs-nav-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 0.25rem 0.55rem 0.55rem;
+    }
+    .docs-nav a {
+        display: block;
+        padding: 0.4rem 0.55rem;
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 500;
+        line-height: 1.3;
+    }
+    .docs-nav a:hover,
+    .docs-nav a.is-active {
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+    .docs-nav a .done-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--success);
+        margin-right: 0.35rem;
+        opacity: 0;
+        vertical-align: middle;
+    }
+    .docs-nav a.is-read .done-dot { opacity: 1; }
+
+    .docs-main { min-width: 0; }
+
+    .docs-hero {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 1.5rem 1.6rem;
+        margin-bottom: 1.15rem;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+    .docs-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 5px;
+        background: linear-gradient(180deg, var(--primary) 0%, #2c6eb0 100%);
+    }
+    .docs-hero h1 {
+        margin: 0 0 0.4rem;
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+    }
+    .docs-hero p {
+        margin: 0 0 1rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        max-width: 52rem;
+        line-height: 1.5;
+    }
+    .docs-search {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .docs-search input {
+        flex: 1;
+        min-width: 220px;
+        padding: 0.65rem 0.9rem;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+    .docs-search input:focus {
+        outline: none;
+        border-color: rgba(26,76,140,0.45);
+        box-shadow: var(--shadow-focus);
+    }
+    .docs-progress {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    .quick-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.05rem;
+        text-decoration: none;
+        color: inherit;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .quick-card:hover {
+        border-color: rgba(26,76,140,0.35);
+        background: var(--primary-bg);
+        transform: translateY(-1px);
+    }
+    .quick-card .n {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    .quick-card strong {
+        font-size: 0.92rem;
+        letter-spacing: -0.01em;
+    }
+    .quick-card span {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    .doc-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        scroll-margin-top: calc(var(--topbar-h, 58px) + 1rem);
+    }
+    .doc-section.is-hidden { display: none; }
+    .doc-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.95rem 1.15rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        user-select: none;
+        background: linear-gradient(180deg, #fafbfc 0%, var(--bg-card) 100%);
+    }
+    [data-theme="dark"] .doc-section-head { background: var(--bg-card); }
+    .doc-section-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+    .doc-section-head .chev {
+        width: 18px;
+        height: 18px;
+        stroke: var(--text-muted);
+        transition: transform 160ms ease;
+        flex-shrink: 0;
+    }
+    .doc-section.is-collapsed .chev { transform: rotate(-90deg); }
+    .doc-section.is-collapsed .doc-section-body { display: none; }
+    .doc-section-body { padding: 1.15rem 1.2rem 1.35rem; }
+
+    .doc-section-body p,
+    .doc-section-body li {
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: var(--text-secondary);
+    }
+    .doc-section-body p { margin: 0 0 0.85rem; }
+    .doc-section-body ul, .doc-section-body ol {
+        margin: 0 0 1rem;
+        padding-left: 1.2rem;
+    }
+    .doc-section-body li { margin-bottom: 0.4rem; }
+    .doc-section-body strong { color: var(--text-primary); font-weight: 650; }
+
+    .callout {
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1rem;
+        margin: 0.85rem 0 1rem;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        border: 1px solid var(--border);
+    }
+    .callout-tip { background: var(--primary-bg); border-color: rgba(26,76,140,0.2); color: var(--text-primary); }
+    .callout-warn { background: rgba(217,119,6,0.1); border-color: rgba(217,119,6,0.25); color: var(--text-primary); }
+    .callout-ok { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.25); color: var(--text-primary); }
+
+    .try-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 0.95rem;
+        border-top: 1px dashed var(--border);
+    }
+    .try-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 650;
+    }
+    .try-btn:hover { background: var(--primary-bg); color: var(--primary); border-color: rgba(26,76,140,0.3); }
+    .try-btn-primary {
+        background: var(--primary);
+        color: #fff !important;
+        border-color: var(--primary);
+    }
+    .try-btn-primary:hover { background: var(--primary-dark); color: #fff !important; }
+
+    .viz {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--border-strong);
+        background: var(--bg-main);
+    }
+    .viz-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.65rem;
+    }
+    .viz-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        align-items: center;
+    }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .pill-pending { background: #fef3c7; color: #b45309; }
+    .pill-progress { background: #dbeafe; color: #1d4ed8; }
+    .pill-done { background: #d1fae5; color: #047857; }
+    .pill-expired { background: #fee2e2; color: #b91c1c; }
+    .pill-transfer { background: #e2e8f0; color: #475569; }
+    .pill-early { background: #e2e8f0; color: #475569; }
+    .pill-start { background: #dbeafe; color: #1d4ed8; }
+    .pill-critical { background: #fef3c7; color: #b45309; }
+    .pill-overdue { background: #fee2e2; color: #b91c1c; }
+    .pill-waiting { background: #f3e8ff; color: #7c3aed; }
+
+    .flow-steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .flow-step {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.7rem 0.75rem;
+        position: relative;
+    }
+    .flow-step .n {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+    }
+    .flow-step strong {
+        display: block;
+        font-size: 0.82rem;
+        margin-bottom: 0.2rem;
+    }
+    .flow-step span {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.35;
+    }
+
+    .mock-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1rem;
+        max-width: 420px;
+    }
+    .mock-card .mock-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+    }
+    .mock-card .mock-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.65rem;
+    }
+    .mock-card .mock-body {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        line-height: 1.45;
+        margin-bottom: 0.75rem;
+    }
+
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+    }
+    .role-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 0.95rem;
+        background: var(--bg-main);
+    }
+    .role-card h4 {
+        margin: 0 0 0.35rem;
+        font-size: 0.88rem;
+    }
+    .role-card p {
+        margin: 0;
+        font-size: 0.8rem !important;
+        color: var(--text-muted) !important;
+    }
+
+    .kbd {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .mark-read {
+        border: none;
+        background: transparent;
+        color: var(--primary);
+        font-size: 0.75rem;
+        font-weight: 650;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+    }
+    .mark-read:hover { text-decoration: underline; }
+
+    .empty-search {
+        display: none;
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .empty-search.is-visible { display: block; }
+
+    @media (max-width: 960px) {
+        .docs-wrap { grid-template-columns: 1fr; }
+        .docs-nav {
+            position: static;
+            max-height: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            padding: 0.65rem;
+        }
+        .docs-nav-title { width: 100%; }
+        .docs-nav a { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+        .quick-grid, .flow-steps, .roles-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-wrap">
+    <nav class="docs-nav" id="docsNav" aria-label="Оглавление">
+        <div class="docs-nav-title">Разделы</div>
+        <a href="#start" data-nav-section="start"><span class="done-dot"></span>Быстрый старт</a>
+        <a href="#dashboard" data-nav-section="dashboard"><span class="done-dot"></span>Обзор и план дня</a>
+        <a href="#letters" data-nav-section="letters"><span class="done-dot"></span>Письма</a>
+        <a href="#deadlines" data-nav-section="deadlines"><span class="done-dot"></span>Сроки и стадии</a>
+        <a href="#transfer" data-nav-section="transfer"><span class="done-dot"></span>Передача</a>
+        <a href="#waiting" data-nav-section="waiting"><span class="done-dot"></span>Жду ответа</a>
+        <a href="#files" data-nav-section="files"><span class="done-dot"></span>Файлы и email</a>
+        <a href="#links" data-nav-section="links"><span class="done-dot"></span>Связи писем</a>
+        <a href="#flows" data-nav-section="flows"><span class="done-dot"></span>Потоки</a>
+        <a href="#requests" data-nav-section="requests"><span class="done-dot"></span>Запросы</a>
+        <a href="#notifications" data-nav-section="notifications"><span class="done-dot"></span>Уведомления</a>
+        <a href="#profile" data-nav-section="profile"><span class="done-dot"></span>Профиль и успех</a>
+        <a href="#export" data-nav-section="export"><span class="done-dot"></span>Excel-экспорт</a>
+        <a href="#roles" data-nav-section="roles"><span class="done-dot"></span>Роли</a>
+        {% if current_user and current_user.is_admin %}
+        <a href="#admin" data-nav-section="admin"><span class="done-dot"></span>Админ</a>
+        {% endif %}
+        <a href="#rules" data-nav-section="rules"><span class="done-dot"></span>Особые регламенты</a>
+    </nav>
+
+    <div class="docs-main">
+        <header class="docs-hero">
+            <h1>Справка по платформе</h1>
+            <p>
+                Подробная интерактивная документация NeTvoyoDelo: от регистрации письма до отчётов.
+                Читайте раздел — сразу пробуйте в системе кнопкой «Открыть».
+            </p>
+            <div class="docs-search">
+                <input type="search" id="docsSearch" placeholder="Найти: передача, срок, excel, уведомления…" autocomplete="off">
+                <span class="docs-progress" id="docsProgress">0 / 0 прочитано</span>
+            </div>
+        </header>
+
+        <div class="quick-grid">
+            <a class="quick-card" href="/api/correspondences/create">
+                <div class="n">01</div>
+                <strong>Создать письмо</strong>
+                <span>Зарегистрируйте входящий документ с номером, сроком и исполнителем</span>
+            </a>
+            <a class="quick-card" href="/">
+                <div class="n">02</div>
+                <strong>План на день</strong>
+                <span>Смотрите «сделать сегодня», горящие письма и рекомендуемый порядок</span>
+            </a>
+            <a class="quick-card" href="/profile/">
+                <div class="n">03</div>
+                <strong>Панель успеха</strong>
+                <span>% в срок, сравнение с месяцем и серия дней без просрочек</span>
+            </a>
+        </div>
+
+        <div class="empty-search" id="emptySearch">Ничего не найдено — попробуйте другое слово.</div>
+
+        <!-- START -->
+        <section class="doc-section" id="start" data-section="start" data-keywords="старт начало регистрация создать первое письмо">
+            <div class="doc-section-head" data-toggle>
+                <h2>Быстрый старт</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Типичный рабочий цикл в системе занимает три шага:</p>
+                <div class="viz">
+                    <div class="viz-label">Схема работы</div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="n">1</div>
+                            <strong>Регистрация</strong>
+                            <span>Номер, отправитель, содержание, срок, исполнитель</span>
+                        </div>
+                        <div class="flow-step">
+                            <div class="n">2</div>
+                            <strong>Исполнение</strong>
+                            <span>Взять в работу, приложить файл, отметить «жду ответа» при необходимости</span>
+                        </div>
+                        <div class="flow-step">
+                            <div class="n">3</div>
+                            <strong>Закрытие</strong>
+                            <span>Статус «Исполнено» + примечание об исполнении</span>
+                        </div>
+                        <div class="flow-step">
+                            <div class="n">4</div>
+                            <strong>Контроль</strong>
+                            <span>План дня, уведомления, панель успеха, отчёты</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="callout callout-tip">
+                    Номер вида <span class="kbd">642/07-25</span> автоматически кладёт письмо в поток <strong>07-25</strong> (всё после «/»).
+                </div>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/create">Создать письмо</a>
+                    <a class="try-btn" href="/api/correspondences/">Открыть реестр</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section class="doc-section" id="dashboard" data-section="dashboard" data-keywords="дашборд обзор план дня сегодня неделя нагрузка взять в работу заметка todo">
+            <div class="doc-section-head" data-toggle>
+                <h2>Обзор и план дня</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Главная страница — ваш рабочий день, а не просто статистика. Здесь видно, чем заняться прямо сейчас.</p>
+                <ul>
+                    <li><strong>Сделать сегодня</strong> — срок сегодня или уже просрочено</li>
+                    <li><strong>На этой неделе</strong> — дедлайн до воскресенья</li>
+                    <li><strong>Жду ответа</strong> — письма с флагом внешнего ожидания</li>
+                    <li><strong>Передано мне — не принято</strong> — входящие передачи со статусом «Передано»</li>
+                </ul>
+                <div class="viz">
+                    <div class="viz-label">Пример нагрузки</div>
+                    <div class="mock-card">
+                        <div class="mock-title">У вас 4 письма, из них 2 горящих</div>
+                        <div class="mock-meta">Сначала закрывайте критичные и просроченные</div>
+                        <div class="viz-row">
+                            <span class="pill pill-overdue">Просрочено</span>
+                            <span class="pill pill-critical">Критично</span>
+                            <span class="pill pill-start">Пора начинать</span>
+                        </div>
+                    </div>
+                </div>
+                <p>К каждому пункту можно написать <strong>заметку</strong> (как в современных todo). Кнопка <strong>«Взять в работу»</strong> сразу ставит статус «В работе». Справа — рекомендуемый порядок по срочности.</p>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/">Открыть обзор</a>
+                    <a class="try-btn" href="/api/correspondences/?urgent=1">Только срочные</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- LETTERS -->
+        <section class="doc-section" id="letters" data-section="letters" data-keywords="письмо статус исполнено в работе ожидании просрочено передано создание редактирование">
+            <div class="doc-section-head" data-toggle>
+                <h2>Письма: создание и статусы</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>В карточке письма хранятся реквизиты, срок, исполнитель, примечания, вложения, связи и история изменений.</p>
+                <div class="viz">
+                    <div class="viz-label">Статусы</div>
+                    <div class="viz-row">
+                        <span class="pill pill-pending">В ожидании</span>
+                        <span class="pill pill-progress">В работе</span>
+                        <span class="pill pill-done">Исполнено</span>
+                        <span class="pill pill-expired">Просрочено</span>
+                        <span class="pill pill-transfer">Передано</span>
+                    </div>
+                </div>
+                <ul>
+                    <li>Для <strong>«Исполнено»</strong> обязательно примечание об исполнении</li>
+                    <li>В списке можно менять статус быстро (quick-status)</li>
+                    <li>После закрытия система покажет короткий «момент награды»: например, «Закрыто за 3 дн. до срока»</li>
+                    <li>Роль <strong>viewer</strong> может только смотреть — создавать и менять нельзя</li>
+                </ul>
+                <div class="callout callout-ok">
+                    Совет: начните с «Взять в работу», а не держите письмо в «В ожидании» до последнего дня.
+                </div>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/create">Новое письмо</a>
+                    <a class="try-btn" href="/api/correspondences/">Все письма</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEADLINES -->
+        <section class="doc-section" id="deadlines" data-section="deadlines" data-keywords="срок дедлайн стадия критично просрочено ещё рано пора начинать напоминание">
+            <div class="doc-section-head" data-toggle>
+                <h2>Сроки и стадии</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Вместо «всё красное» система делит срок на понятные стадии — в списке, карточке и уведомлениях.</p>
+                <div class="viz">
+                    <div class="viz-label">Стадии срока</div>
+                    <div class="viz-row">
+                        <span class="pill pill-early">Ещё рано</span>
+                        <span class="pill pill-start">Пора начинать</span>
+                        <span class="pill pill-critical">Критично</span>
+                        <span class="pill pill-overdue">Просрочено</span>
+                        <span class="pill pill-waiting">Жду ответа</span>
+                    </div>
+                </div>
+                <ul>
+                    <li><strong>Пора начинать</strong> — срок приближается: в уведомлении будет «рекомендуем взять в работу»</li>
+                    <li><strong>Критично</strong> — сегодня или завтра</li>
+                    <li><strong>Просрочено</strong> — автостатус при наступлении даты (если письмо не «жду ответа»)</li>
+                </ul>
+                <p>В профиле можно настроить, за сколько дней слать первое напоминание (<code>reminder_days_before</code>).</p>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/?urgent=1">Срочные письма</a>
+                    <a class="try-btn" href="/notifications/check">Центр уведомлений</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSFER -->
+        <section class="doc-section" id="transfer" data-section="transfer" data-keywords="передача передать коллеге принять не принято">
+            <div class="doc-section-head" data-toggle>
+                <h2>Передача писем</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>На карточке письма можно передать документ другому сотруднику с комментарием. Получатель увидит письмо в плане дня в блоке <strong>«Передано мне — не принято»</strong>, пока статус «Передано».</p>
+                <div class="viz">
+                    <div class="viz-label">Как принять</div>
+                    <div class="mock-card">
+                        <div class="mock-title">№ 118/07-25 · Передано вам</div>
+                        <div class="mock-meta">Комментарий: «Прошу подготовить ответ в школу»</div>
+                        <div class="viz-row">
+                            <span class="pill pill-transfer">Передано</span>
+                            <span class="pill pill-progress">→ Взять в работу</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="callout callout-tip">
+                    Нажмите «Взять в работу» на дашборде или в карточке — статус станет «В работе», и письмо уйдёт из очереди непринятых.
+                </div>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/#work-plan">План дня (передачи)</a>
+                    <a class="try-btn" href="/api/correspondences/">Найти письмо для передачи</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- WAITING -->
+        <section class="doc-section" id="waiting" data-section="waiting" data-keywords="жду ответа внешний отправитель нагрузка просрочка флаг">
+            <div class="doc-section-head" data-toggle>
+                <h2>«Жду внешнего ответа»</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Если мяч на стороне отправителя или внешней организации — включите флаг <strong>«Жду внешнего ответа»</strong> (форма редактирования или кнопка на карточке).</p>
+                <ul>
+                    <li>Письмо <strong>не считается</strong> в личной нагрузке и «горящих»</li>
+                    <li>Не давит deadline-напоминаниями и не авто-протухает, пока флаг включён</li>
+                    <li>Отдельная секция на дашборде — чтобы не потерять контекст</li>
+                </ul>
+                <div class="callout callout-warn">
+                    Когда ответ получен — снимите флаг и продолжайте работу, иначе контроль сроков «зависнет».
+                </div>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/">Выбрать письмо и включить флаг</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILES -->
+        <section class="doc-section" id="files" data-section="files" data-keywords="вложение файл pdf email почта отправить скачать">
+            <div class="doc-section-head" data-toggle>
+                <h2>Файлы и отправка на почту</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>К письму можно прикрепить файлы на карточке документа. При отправке на email система:</p>
+                <ol>
+                    <li>Собирает красивую HTML-карточку со всем контекстом письма</li>
+                    <li><strong>Автоматически прикладывает</strong> уже связанные файлы (если галочка включена)</li>
+                    <li>Позволяет добавить ещё один файл вручную или отправить без вложений</li>
+                </ol>
+                <p>Форматы ручного вложения: pdf, jpg/png, word, excel, txt. Отправка — себе или на указанный адрес (нужен настроенный SMTP).</p>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/">Открыть письмо → Редактировать → Отправить</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- LINKS -->
+        <section class="doc-section" id="links" data-section="links" data-keywords="связь related reply follow-up supersedes граф карта">
+            <div class="doc-section-head" data-toggle>
+                <h2>Связи между письмами</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Письма можно связывать друг с другом или с внешними реквизитами (если второго письма ещё нет в системе).</p>
+                <div class="viz">
+                    <div class="viz-label">Типы связей</div>
+                    <div class="viz-row">
+                        <span class="pill pill-progress">Связано</span>
+                        <span class="pill pill-done">Ответ на</span>
+                        <span class="pill pill-start">Продолжение</span>
+                        <span class="pill pill-critical">Заменяет</span>
+                    </div>
+                </div>
+                <p>Есть визуальная карта связей — удобно видеть цепочки переписки.</p>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/links">Карта связей</a>
+                    <a class="try-btn" href="/api/correspondences/">Добавить связь в письме</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLOWS -->
+        <section class="doc-section" id="flows" data-section="flows" data-keywords="поток журнал папка номер слэш группировка">
+            <div class="doc-section-head" data-toggle>
+                <h2>Потоки (журналы)</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Поток — это журнал писем с общим суффиксом номера. Пример: все <span class="kbd">…/07-25</span> собираются в поток <strong>07-25</strong>.</p>
+                <ul>
+                    <li>Список потоков показывает прогресс: всего / исполнено / в работе</li>
+                    <li>Внутри потока — таблица писем и выгрузка в Excel</li>
+                    <li>Поток определяется автоматически при создании/редактировании номера</li>
+                </ul>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/flows/">Открыть потоки</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- REQUESTS -->
+        <section class="doc-section" id="requests" data-section="requests" data-keywords="запрос минпросвещения собственные цели отчетность">
+            <div class="doc-section-head" data-toggle>
+                <h2>Письма-запросы</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Если письмо нужно для отчётности, укажите тип запроса в форме:</p>
+                <ul>
+                    <li><strong>Для собственных целей</strong></li>
+                    <li><strong>Для Министерства просвещения России</strong></li>
+                </ul>
+                <p>Раздел «Запросы» показывает только такие письма, с фильтрами и Excel-экспортом.</p>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/requests/">Открыть запросы</a>
+                    <a class="try-btn" href="/api/correspondences/create">Пометить при создании</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOTIFICATIONS -->
+        <section class="doc-section" id="notifications" data-section="notifications" data-keywords="уведомления email sms браузер тихие часы напоминание">
+            <div class="doc-section-head" data-toggle>
+                <h2>Уведомления</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Система напоминает о сроках и передачах по каналам: <strong>браузер</strong>, email, SMS (если настроено).</p>
+                <ul>
+                    <li>Этапы: «пора начинать» → за 1 день → сегодня → просрочка</li>
+                    <li>Тексты подсказывают действие: «рекомендуем взять в работу»</li>
+                    <li>В профиле: каналы, тихие часы, за сколько дней напоминать</li>
+                    <li>Письма «жду ответа» не спамят по сроку</li>
+                </ul>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/notifications/check">Центр уведомлений</a>
+                    <a class="try-btn" href="/profile/">Настройки в профиле</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section class="doc-section" id="profile" data-section="profile" data-keywords="профиль успех процент в срок streak серия ai отчёт коллеги">
+            <div class="doc-section-head" data-toggle>
+                <h2>Профиль и панель успеха</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>В профиле — не только аватар и пароль, но и мотивационная панель:</p>
+                <ul>
+                    <li><strong>% в срок</strong> — не просто «исполнено», а вовремя</li>
+                    <li>Сравнение с прошлым месяцем («+12% вовремя»)</li>
+                    <li>Среднее время исполнения vs отдел</li>
+                    <li>Мягкий streak: рабочие дни без просрочек</li>
+                    <li>AI-отчёт о работе за период (если настроен Cloudflare AI)</li>
+                </ul>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/profile/">Открыть профиль</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPORT -->
+        <section class="doc-section" id="export" data-section="export" data-keywords="excel экспорт выгрузка таблица цвета легенда">
+            <div class="doc-section-head" data-toggle>
+                <h2>Excel-экспорт</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Выгрузка доступна из реестра писем, потоков и запросов. Файл оформлен:</p>
+                <ul>
+                    <li>Цветные статусы и стадии срока</li>
+                    <li>Заголовок отчёта, дата, число записей</li>
+                    <li>Автофильтр, закреплённая шапка</li>
+                    <li>Лист «Легенда» с расшифровкой цветов</li>
+                </ul>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/api/correspondences/export">Скачать реестр Excel</a>
+                    <a class="try-btn" href="/flows/">Экспорт из потока</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROLES -->
+        <section class="doc-section" id="roles" data-section="roles" data-keywords="роль executor controller viewer админ права доступ">
+            <div class="doc-section-head" data-toggle>
+                <h2>Роли и доступ</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <div class="roles-grid">
+                    <div class="role-card">
+                        <h4>Executor</h4>
+                        <p>Исполнитель: создаёт и ведёт свои письма, принимает передачи, закрывает исполнение.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Controller</h4>
+                        <p>Контролёр: видит письма отдела, получает сигналы о «зависших» документах.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Viewer</h4>
+                        <p>Только просмотр по отделу: без создания, правок и передач.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Admin</h4>
+                        <p>Полный доступ: пользователи, отделы, отчёты, логи доставки уведомлений.</p>
+                    </div>
+                </div>
+                {% if current_user %}
+                <div class="callout callout-tip" style="margin-top: 1rem;">
+                    Ваша текущая роль:
+                    <strong>{{ current_user.role }}</strong>
+                    {% if current_user.is_admin %} · администратор{% endif %}
+                    · отдел: <strong>{{ current_user.department }}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        {% if current_user and current_user.is_admin %}
+        <section class="doc-section" id="admin" data-section="admin" data-keywords="админ пользователи отделы отчёты логи">
+            <div class="doc-section-head" data-toggle>
+                <h2>Администрирование</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <ul>
+                    <li><strong>Панель</strong> — сводные KPI по пользователям и письмам</li>
+                    <li><strong>Пользователи</strong> — роли, блокировка, отдел, админ-флаг</li>
+                    <li><strong>Отделы</strong> — справочник подразделений</li>
+                    <li><strong>Отчёты</strong> — % в срок, нагрузка сотрудников, разрезы по отделам</li>
+                    <li><strong>Логи доставки</strong> — что ушло по email/SMS/браузеру</li>
+                </ul>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/admin/">Админ-панель</a>
+                    <a class="try-btn" href="/admin/reports">Отчёты</a>
+                    <a class="try-btn" href="/admin/users">Пользователи</a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- RULES (compact org regs from old help) -->
+        <section class="doc-section" id="rules" data-section="rules" data-keywords="регламент дсп спец 07-29 критический поток служебный">
+            <div class="doc-section-head" data-toggle>
+                <h2>Особые регламенты</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>Организационные правила, которые важно помнить сверх возможностей системы:</p>
+                <div class="roles-grid">
+                    <div class="role-card">
+                        <h4>Приоритетный поток /07-29</h4>
+                        <p>Не закрывать без письменного ответа автору и копии руководителю. Ответ — полный и по существу.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>ДСП</h4>
+                        <p>Не распространять и не прикреплять к общим рассылкам. Действия согласовывать с руководством.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Спецкорреспонденция</h4>
+                        <p>Обязательное изучение и согласование. Запрещены копирование и пересылка содержимого.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Общее</h4>
+                        <p>По спорным случаям — к руководителю отдела документооборота.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const STORAGE_KEY = 'ntd_help_read_v1';
+    const sections = Array.from(document.querySelectorAll('.doc-section'));
+    const navLinks = Array.from(document.querySelectorAll('#docsNav a[data-nav-section]'));
+    const search = document.getElementById('docsSearch');
+    const progressEl = document.getElementById('docsProgress');
+    const emptySearch = document.getElementById('emptySearch');
+
+    function loadRead() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+    function saveRead(ids) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    }
+
+    let readIds = loadRead();
+
+    function updateProgress() {
+        const total = sections.length;
+        const done = readIds.filter(id => sections.some(s => s.dataset.section === id)).length;
+        if (progressEl) progressEl.textContent = done + ' / ' + total + ' прочитано';
+        navLinks.forEach(a => {
+            const id = a.getAttribute('data-nav-section');
+            a.classList.toggle('is-read', readIds.includes(id));
+        });
+    }
+
+    function markRead(id) {
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            saveRead(readIds);
+            updateProgress();
+        }
+    }
+
+    sections.forEach(section => {
+        const head = section.querySelector('[data-toggle]');
+        const markBtn = section.querySelector('[data-mark]');
+        if (head) {
+            head.addEventListener('click', (e) => {
+                if (e.target.closest('[data-mark]')) return;
+                section.classList.toggle('is-collapsed');
+            });
+        }
+        if (markBtn) {
+            markBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                markRead(section.dataset.section);
+                markBtn.textContent = 'Прочитано ✓';
+            });
+            if (readIds.includes(section.dataset.section)) {
+                markBtn.textContent = 'Прочитано ✓';
+            }
+        }
+    });
+
+    // Intersection observer: auto-highlight nav + soft mark as read when mostly visible
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const id = entry.target.dataset.section;
+            navLinks.forEach(a => a.classList.toggle('is-active', a.getAttribute('data-nav-section') === id));
+            if (entry.intersectionRatio > 0.55) markRead(id);
+        });
+    }, { rootMargin: '-20% 0px -45% 0px', threshold: [0.2, 0.55, 0.8] });
+
+    sections.forEach(s => io.observe(s));
+
+    if (search) {
+        search.addEventListener('input', () => {
+            const q = (search.value || '').trim().toLowerCase();
+            let visible = 0;
+            sections.forEach(section => {
+                const hay = (
+                    (section.dataset.keywords || '') + ' ' +
+                    (section.textContent || '')
+                ).toLowerCase();
+                const show = !q || hay.includes(q);
+                section.classList.toggle('is-hidden', !show);
+                if (show) {
+                    visible += 1;
+                    if (q) section.classList.remove('is-collapsed');
+                }
+            });
+            if (emptySearch) emptySearch.classList.toggle('is-visible', visible === 0);
+        });
+    }
+
+    updateProgress();
+
+    // Open hash section expanded
+    if (location.hash) {
+        const target = document.querySelector(location.hash);
+        if (target && target.classList.contains('doc-section')) {
+            target.classList.remove('is-collapsed');
+            setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        }
+    }
+})();
+</script>
+{% endblock %}

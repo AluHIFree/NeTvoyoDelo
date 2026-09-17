@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}NeTvoyoDelo | Управление документами{% endblock %}</title>
+    <link rel="icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if not current_user %}is-guest{% endif %}">
+    <button class="theme-toggle" id="theme-toggle" title="Сменить тему" type="button">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    {% if current_user %}
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    <div class="app-shell">
+        <aside class="app-sidebar" id="app-sidebar">
+            <a href="/" class="sidebar-brand">
+                <div class="sidebar-brand-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>NeTvoyoDelo</h1>
+                    <p>Входящая корреспонденция</p>
+                </div>
+            </a>
+
+            <a href="/api/correspondences/create" class="side-cta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Новое письмо
+            </a>
+
+            <div class="nav-section-label">Основное</div>
+            <a href="/" class="side-link" data-nav="/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Обзор
+            </a>
+            <a href="/api/correspondences/" class="side-link" data-nav="/api/correspondences">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+                Все письма
+            </a>
+            <a href="/flows/" class="side-link" data-nav="/flows">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                Потоки
+            </a>
+            <a href="/requests/" class="side-link" data-nav="/requests">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                Запросы
+            </a>
+            <a href="/notifications/check" class="side-link" data-nav="/notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Уведомления
+                <span id="unread-badge" class="side-badge" data-count="0"></span>
+            </a>
+
+            <div class="nav-section-label">Аккаунт</div>
+            <a href="/profile/" class="side-link" data-nav="/profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Профиль
+            </a>
+            <a href="/help" class="side-link" data-nav="/help">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Справка
+            </a>
+
+            {% if current_user.is_admin %}
+            <div class="nav-section-label">Администрирование</div>
+            <a href="/admin/" class="side-link" data-nav="/admin/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Панель
+            </a>
+            <a href="/updates/" class="side-link" data-nav="/updates">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                Обновления
+            </a>
+            <a href="/admin/users" class="side-link" data-nav="/admin/users">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                Пользователи
+            </a>
+            <a href="/admin/departments" class="side-link" data-nav="/admin/departments">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>
+                Отделы
+            </a>
+            <a href="/admin/reports" class="side-link" data-nav="/admin/reports">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                Отчёты
+            </a>
+            <a href="/admin/delivery-logs" class="side-link" data-nav="/admin/delivery-logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Логи доставки
+            </a>
+            {% endif %}
+
+            <div class="sidebar-footer">
+                <a href="/api/auth/logout" class="side-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Выйти
+                </a>
+            </div>
+        </aside>
+
+        <header class="app-topbar">
+            <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Меню">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <form class="topbar-search" action="/api/correspondences/" method="get" role="search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" name="q" placeholder="Поиск по номеру, отправителю, тексту…" autocomplete="off">
+            </form>
+            <div class="topbar-actions">
+                <div class="notif-wrap" id="notif-wrap">
+                    <button type="button" class="icon-btn" id="notif-bell-btn" title="Уведомления" aria-expanded="false" aria-controls="notif-dropdown">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="topbar-unread-dot" class="dot" data-count="0"></span>
+                    </button>
+                    <div class="notif-dropdown" id="notif-dropdown" role="menu" hidden>
+                        <div class="notif-dd-header">
+                            <strong>Уведомления</strong>
+                            <a href="/notifications/check">Все →</a>
+                        </div>
+                        <div class="notif-dd-list" id="notif-dd-list">
+                            <div class="notif-dd-empty">Загрузка…</div>
+                        </div>
+                        <div class="notif-dd-footer">
+                            <button type="button" id="notif-mark-all">Отметить прочитанными</button>
+                            <a href="/notifications/check">Открыть полностью</a>
+                        </div>
+                    </div>
+                </div>
+                <a href="/profile/" class="user-chip" title="Профиль">
+                    <span class="user-avatar">{{ current_user.full_name[:1] }}</span>
+                    <span class="user-chip-text">
+                        <strong>{{ current_user.full_name }}</strong>
+                        <span>{{ current_user.department }}</span>
+                    </span>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="container">
+    {% else %}
+    <div class="guest-frame">
+        <div class="guest-top">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+                </div>
+                <div class="logo-text">
+                    <h1>NeTvoyoDelo</h1>
+                    <p>Входящая корреспонденция</p>
+                </div>
+            </a>
+            <div class="guest-actions">
+                <a href="/api/auth/login" class="nav-btn nav-btn-primary">Войти</a>
+                <a href="/api/auth/register" class="nav-btn nav-btn-outline">Регистрация</a>
+            </div>
+        </div>
+        <div class="page-container">
+            <div class="container">
+    {% endif %}
+
+                {% block content %}{% endblock %}
+
+                <div class="footer-credit">NeTvoyoDelo · учёт входящих документов · &copy; 2026</div>
+            </div>
+    {% if current_user %}
+        </main>
+    </div>
+    {% else %}
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+        const sunIcon = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+        const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+
+        function setTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('corpo_theme', theme);
+            themeIcon.innerHTML = theme === 'dark' ? moonIcon : sunIcon;
+        }
+        setTheme(localStorage.getItem('corpo_theme') || 'light');
+        themeToggle.addEventListener('click', () => {
+            setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+
+        (function () {
+            const path = window.location.pathname;
+            document.querySelectorAll('.side-link[data-nav]').forEach((el) => {
+                const key = el.getAttribute('data-nav');
+                if (key === '/' && path === '/') el.classList.add('is-active');
+                else if (key !== '/' && path.startsWith(key)) el.classList.add('is-active');
+            });
+        })();
+
+        const toggle = document.getElementById('mobile-nav-toggle');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        if (toggle) toggle.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+        if (backdrop) backdrop.addEventListener('click', () => document.body.classList.remove('sidebar-open'));
+
+        {% if current_user %}
+        (function () {
+            const STORAGE_KEY = 'notif_last_seen_count';
+            const bellBtn = document.getElementById('notif-bell-btn');
+            const dropdown = document.getElementById('notif-dropdown');
+            const listEl = document.getElementById('notif-dd-list');
+            const markAllBtn = document.getElementById('notif-mark-all');
+
+            function updateBadge(count) {
+                const badge = document.getElementById('unread-badge');
+                const dot = document.getElementById('topbar-unread-dot');
+                if (badge) {
+                    badge.setAttribute('data-count', String(count));
+                    badge.textContent = count > 0 ? String(count) : '';
+                }
+                if (dot) {
+                    dot.setAttribute('data-count', String(count));
+                    dot.textContent = count > 0 ? ' ' : '';
+                }
+            }
+
+            function typeLabel(type) {
+                const t = String(type || '').toLowerCase();
+                if (t.includes('email') || t.includes('mail')) return 'Почта';
+                if (t.includes('sms')) return 'SMS';
+                if (t.includes('deadline') || t.includes('срок')) return 'Срок';
+                if (t.includes('transfer') || t.includes('переда')) return 'Передача';
+                return 'В системе';
+            }
+
+            function formatTime(iso) {
+                if (!iso) return '';
+                try {
+                    const d = new Date(iso);
+                    const now = new Date();
+                    const sameDay = d.toDateString() === now.toDateString();
+                    if (sameDay) {
+                        return 'сегодня, ' + d.toLocaleTimeString('ru-RU', {
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                    }
+                    return d.toLocaleString('ru-RU', {
+                        day: '2-digit', month: 'short',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                } catch (e) { return ''; }
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? '').replace(/[&<>"']/g, c => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                }[c]));
+            }
+
+            function renderList(items) {
+                if (!listEl) return;
+                if (!items || !items.length) {
+                    listEl.innerHTML = '<div class="notif-dd-empty">Пока нет непрочитанных уведомлений</div>';
+                    return;
+                }
+                listEl.innerHTML = items.slice(0, 8).map((n) => {
+                    const href = n.link || '/notifications/check';
+                    const msg = escapeHtml((n.message || 'Уведомление').trim());
+                    const meta = escapeHtml(formatTime(n.sent_at));
+                    const chip = escapeHtml(typeLabel(n.type));
+                    return `<a class="notif-dd-item" href="${href}" data-id="${n.id}">
+                        <span class="notif-dd-dot" aria-hidden="true"></span>
+                        <span class="notif-dd-body">
+                            <span class="notif-dd-msg">${msg}</span>
+                            <span class="notif-dd-meta">
+                                ${meta ? `<span>${meta}</span>` : ''}
+                                <span class="notif-dd-chip">${chip}</span>
+                            </span>
+                        </span>
+                    </a>`;
+                }).join('');
+
+                listEl.querySelectorAll('.notif-dd-item[data-id]').forEach((el) => {
+                    el.addEventListener('click', () => {
+                        const id = el.getAttribute('data-id');
+                        if (!id) return;
+                        fetch('/notifications/' + id + '/mark-read', {
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        }).catch(() => {});
+                    });
+                });
+            }
+
+            async function loadPreview() {
+                if (!listEl) return;
+                listEl.innerHTML = '<div class="notif-dd-empty">Загрузка…</div>';
+                try {
+                    const res = await fetch('/notifications/api/unread', { credentials: 'same-origin' });
+                    const data = await res.json();
+                    renderList(Array.isArray(data) ? data : (data.items || []));
+                } catch (e) {
+                    listEl.innerHTML = '<div class="notif-dd-empty">Не удалось загрузить</div>';
+                }
+            }
+
+            function openDropdown() {
+                if (!dropdown || !bellBtn) return;
+                dropdown.hidden = false;
+                dropdown.classList.add('is-open');
+                bellBtn.setAttribute('aria-expanded', 'true');
+                loadPreview();
+            }
+
+            function closeDropdown() {
+                if (!dropdown || !bellBtn) return;
+                dropdown.classList.remove('is-open');
+                dropdown.hidden = true;
+                bellBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            function toggleDropdown(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!dropdown) return;
+                if (dropdown.classList.contains('is-open')) closeDropdown();
+                else openDropdown();
+            }
+
+            if (bellBtn) bellBtn.addEventListener('click', toggleDropdown);
+            document.addEventListener('click', (e) => {
+                const wrap = document.getElementById('notif-wrap');
+                if (!wrap || !dropdown) return;
+                if (!wrap.contains(e.target)) closeDropdown();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeDropdown();
+            });
+
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async () => {
+                    try {
+                        await fetch('/notifications/mark-all-read', {
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        });
+                        updateBadge(0);
+                        localStorage.setItem(STORAGE_KEY, '0');
+                        renderList([]);
+                    } catch (e) {}
+                });
+            }
+
+            async function pollUnread() {
+                try {
+                    const response = await fetch('/notifications/api/unread-count');
+                    const data = await response.json();
+                    const count = Number(data.unread_count) || 0;
+                    updateBadge(count);
+                    const lastSeen = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+                    if (count > lastSeen) {
+                        if (Notification.permission === 'granted') {
+                            new Notification('Новые уведомления', {
+                                body: count + ' требуют внимания',
+                                icon: '/static/favicon.ico'
+                            });
+                        }
+                        localStorage.setItem(STORAGE_KEY, String(count));
+                    } else if (count < lastSeen) {
+                        localStorage.setItem(STORAGE_KEY, String(count));
+                    }
+                } catch (e) {}
+            }
+            pollUnread();
+            setInterval(pollUnread, 60000);
+            if (Notification.permission === 'default') Notification.requestPermission();
+        })();
+        {% endif %}
+    </script>
+    {% block extra_js %}{% endblock %}
+    <script src="/static/js/password-toggle.js" defer></script>
+</body>
+</html>
