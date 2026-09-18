@@ -540,11 +540,11 @@
                 onchange="if (this.value) window.location.href=this.value;">
             <option value="">Выбрать фильтр…</option>
             {% for sf in saved_filters %}
-            <option value="/api/correspondences/?saved_filter={{ sf.id }}">{{ sf.name }}</option>
+            <option value="/api/correspondences/?saved_filter_id={{ sf.id }}">{{ sf.name }}</option>
             {% endfor %}
         </select>
         {% for sf in saved_filters %}
-        <a class="saved-filter-chip" href="/api/correspondences/?saved_filter={{ sf.id }}">{{ sf.name }}</a>
+        <a class="saved-filter-chip" href="/api/correspondences/?saved_filter_id={{ sf.id }}">{{ sf.name }}</a>
         {% endfor %}
     </div>
     {% endif %}

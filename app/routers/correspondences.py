@@ -3,12 +3,29 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSON
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
-from typing import Optional, List
+from typing import Annotated, Optional, List, Any
 from datetime import date, datetime
 from pathlib import Path
+from pydantic import BeforeValidator
 import json
 import os
 import uuid
+
+
+def _coerce_optional_int(v: Any) -> Optional[int]:
+    if v is None or v == "":
+        return None
+    if isinstance(v, bool):
+        raise ValueError("invalid int")
+    if isinstance(v, int):
+        return v
+    s = str(v).strip()
+    if not s:
+        return None
+    return int(s)
+
+
+OptionalInt = Annotated[Optional[int], BeforeValidator(_coerce_optional_int)]
 
 from app.database import get_db
 from app import models
@@ -225,8 +242,8 @@ async def correspondences_page(
     q: Optional[str] = None,
     status_filter: Optional[str] = None,
     urgent: Optional[str] = None,
-    executor_id: Optional[int] = None,
-    saved_filter_id: Optional[int] = None,
+    executor_id: OptionalInt = None,
+    saved_filter_id: OptionalInt = None,
     db: Session = Depends(get_db),
 ):
     """Список писем с поиском и фильтрами."""
@@ -375,7 +392,7 @@ async def export_correspondences_to_excel(
     status_filter: Optional[str] = None,
     q: Optional[str] = None,
     urgent: Optional[str] = None,
-    executor_id: Optional[int] = None,
+    executor_id: OptionalInt = None,
     db: Session = Depends(get_db),
 ):
     from fastapi.responses import StreamingResponse
