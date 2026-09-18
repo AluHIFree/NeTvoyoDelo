@@ -430,6 +430,7 @@
         <a href="#flows" data-nav-section="flows"><span class="done-dot"></span>Потоки</a>
         <a href="#requests" data-nav-section="requests"><span class="done-dot"></span>Запросы</a>
         <a href="#notifications" data-nav-section="notifications"><span class="done-dot"></span>Уведомления</a>
+        <a href="#mail-parser" data-nav-section="mail-parser"><span class="done-dot"></span>Парсер почты</a>
         <a href="#profile" data-nav-section="profile"><span class="done-dot"></span>Профиль и успех</a>
         <a href="#export" data-nav-section="export"><span class="done-dot"></span>Excel-экспорт</a>
         <a href="#roles" data-nav-section="roles"><span class="done-dot"></span>Роли</a>
@@ -799,6 +800,47 @@
                 <div class="try-row">
                     <a class="try-btn try-btn-primary" href="/notifications/check">Центр уведомлений</a>
                     <a class="try-btn" href="/profile/">Настройки в профиле</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIL PARSER -->
+        <section class="doc-section" id="mail-parser" data-section="mail-parser" data-keywords="парсер почты imap яндекс gmail mail.ru поиск письмо вложение pdf docx rtf пароль приложения">
+            <div class="doc-section-head" data-toggle>
+                <h2>Парсер почты</h2>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="mark-read" data-mark>Отметить прочитанным</button>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="doc-section-body">
+                <p>
+                    Раздел для поиска письма во <strong>своём</strong> почтовом ящике, когда номер забыт,
+                    но помнится смысл («про ремонт школы», «бюджет», «ответ из министерства»).
+                    Парсер смотрит тему, текст и содержимое вложений <span class="kbd">PDF</span> /
+                    <span class="kbd">DOCX</span> / <span class="kbd">RTF</span> / <span class="kbd">TXT</span>.
+                </p>
+                <h3 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Как подключить ящик</h3>
+                <ol>
+                    <li>Откройте <strong>Парсер почты</strong> в боковом меню</li>
+                    <li>Выберите провайдера: Яндекс, Mail.ru, Gmail или свой IMAP</li>
+                    <li>Укажите email и <strong>пароль приложения</strong> (не обычный пароль от аккаунта)</li>
+                    <li>Для Яндекса: в настройках почты включите IMAP и «Пароли приложений», хост <span class="kbd">imap.yandex.ru</span>, порт <span class="kbd">993</span>, SSL</li>
+                    <li>Нажмите <strong>Сохранить</strong>, затем <strong>Проверить связь</strong></li>
+                </ol>
+                <h3 style="font-size:0.95rem;margin:1rem 0 0.5rem;">Как искать</h3>
+                <ul>
+                    <li>Опишите своими словами, о чём было письмо</li>
+                    <li>При необходимости сузьте период (дни) и лимит писем</li>
+                    <li>Если точного совпадения нет — покажутся <strong>ближайшие варианты</strong> с оценкой похожести</li>
+                    <li>Повторный поиск быстрее: уже разобранные письма берутся из локального кэша, с сервера качаются только новые</li>
+                </ul>
+                <div class="callout" style="margin:0.85rem 0;padding:0.75rem 0.9rem;border-radius:8px;background:var(--primary-bg);font-size:0.85rem;">
+                    Пароль хранится только у вас, в зашифрованном виде. Не передавайте пароль приложения третьим лицам.
+                    Роль «наблюдатель» раздел не использует.
+                </div>
+                <div class="try-row">
+                    <a class="try-btn try-btn-primary" href="/mail-parser/">Открыть парсер почты</a>
                 </div>
             </div>
         </section>

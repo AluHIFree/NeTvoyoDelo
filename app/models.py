@@ -383,3 +383,59 @@ class WorkPlanNote(Base):
 
     user = relationship("User", back_populates="work_plan_notes")
     correspondence = relationship("Correspondence")
+
+
+# --- IMAP-ящик пользователя (парсер почты) ---
+class MailboxAccount(Base):
+    """Персональные IMAP-настройки. Пароль хранится только в зашифрованном виде."""
+
+    __tablename__ = "mailbox_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    provider = Column(String, nullable=False, default="yandex")  # yandex|mailru|gmail|custom
+    email = Column(String, nullable=False)
+    imap_host = Column(String, nullable=False)
+    imap_port = Column(Integer, nullable=False, default=993)
+    use_ssl = Column(Boolean, nullable=False, default=True)
+    password_encrypted = Column(Text, nullable=False)
+    folder = Column(String, nullable=False, default="INBOX")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_checked_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", backref="mailbox_account")
+    messages = relationship(
+        "MailMessageCache",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+
+
+class MailMessageCache(Base):
+    """Кэш распарсенных писем для повторного поиска без полной перекачки."""
+
+    __tablename__ = "mail_message_cache"
+    __table_args__ = (
+        UniqueConstraint(
+            "account_id",
+            "folder",
+            "message_uid",
+            name="uq_mail_cache_account_folder_uid",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("mailbox_accounts.id"), nullable=False, index=True)
+    folder = Column(String, nullable=False, default="INBOX")
+    message_uid = Column(String, nullable=False)
+    message_id_header = Column(String, nullable=True, index=True)
+    subject = Column(String, nullable=True)
+    from_addr = Column(String, nullable=True)
+    sent_at = Column(DateTime, nullable=True, index=True)
+    body_text = Column(Text, nullable=True)
+    attachments_text = Column(Text, nullable=True)
+    attachment_names = Column(Text, nullable=True)  # через ;
+    indexed_at = Column(DateTime, default=datetime.utcnow)
+
+    account = relationship("MailboxAccount", back_populates="messages")

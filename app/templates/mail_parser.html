@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Парсер почты | NeTvoyoDelo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mp-hero { margin-bottom: 1.35rem; }
+    .mp-hero h1 {
+        font-size: 1.5rem; font-weight: 600; letter-spacing: -0.3px;
+        color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;
+        margin: 0 0 0.35rem;
+    }
+    .mp-hero h1 svg { width: 28px; height: 28px; stroke: var(--primary); }
+    .mp-hero p { color: var(--text-muted); font-size: 0.85rem; margin: 0; max-width: 46rem; }
+
+    .mp-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr;
+        gap: 1.25rem;
+        align-items: start;
+    }
+    @media (max-width: 980px) { .mp-grid { grid-template-columns: 1fr; } }
+
+    .mp-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    .mp-card-h {
+        padding: 0.85rem 1.2rem;
+        border-bottom: 1px solid var(--border-light);
+        background: var(--primary-bg);
+        font-size: 0.75rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.4px;
+        color: var(--text-primary);
+    }
+    .mp-card-b { padding: 1.2rem; }
+
+    .mp-form { display: grid; gap: 0.85rem; }
+    .mp-row { display: grid; gap: 0.35rem; }
+    .mp-row label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+    .mp-row input, .mp-row select, .mp-row textarea {
+        width: 100%;
+        border: 1px solid var(--border-light);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        padding: 0.55rem 0.7rem;
+        font: inherit;
+    }
+    .mp-row textarea { min-height: 88px; resize: vertical; }
+    .mp-hint { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+    .mp-inline { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .mp-inline > * { flex: 1; min-width: 120px; }
+    .mp-check {
+        display: flex; align-items: center; gap: 0.45rem;
+        font-size: 0.85rem; color: var(--text-primary); margin-top: 1.4rem;
+    }
+
+    .mp-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.25rem; }
+    .mp-btn {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        border: 1px solid var(--border-light);
+        background: var(--bg-main);
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        padding: 0.5rem 0.9rem;
+        font-size: 0.85rem; font-weight: 600;
+        cursor: pointer; text-decoration: none;
+    }
+    .mp-btn-primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .mp-btn-danger { color: #b42318; }
+
+    .mp-alert {
+        border-radius: var(--radius-md);
+        padding: 0.75rem 0.95rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        white-space: pre-line;
+    }
+    .mp-alert-error { background: #fef3f2; color: #b42318; border: 1px solid #fecdca; }
+    .mp-alert-ok { background: #ecfdf3; color: #027a48; border: 1px solid #abefc6; }
+    [data-theme="dark"] .mp-alert-error { background: #3b1511; color: #fda29b; border-color: #7a271a; }
+    [data-theme="dark"] .mp-alert-ok { background: #053321; color: #75e0a7; border-color: #085d3a; }
+
+    .mp-result-msg {
+        font-size: 0.9rem; color: var(--text-primary);
+        margin: 0 0 1rem; padding: 0.75rem 0.9rem;
+        background: var(--primary-bg); border-radius: var(--radius-md);
+    }
+    .mp-hit {
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .mp-hit-top {
+        display: flex; justify-content: space-between; gap: 0.75rem;
+        align-items: flex-start; margin-bottom: 0.35rem;
+    }
+    .mp-hit h3 { margin: 0; font-size: 0.95rem; color: var(--text-primary); }
+    .mp-score {
+        font-size: 0.72rem; font-weight: 700;
+        padding: 0.2rem 0.45rem; border-radius: 999px;
+        background: var(--primary-bg); color: var(--primary); white-space: nowrap;
+    }
+    .mp-meta { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .mp-snippet {
+        font-size: 0.84rem; color: var(--text-primary);
+        line-height: 1.45; background: var(--bg-main);
+        border-radius: var(--radius-sm); padding: 0.55rem 0.65rem;
+    }
+    .mp-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+    .mp-tag {
+        font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.3px; padding: 0.15rem 0.4rem;
+        border-radius: 4px; background: var(--bg-main); color: var(--text-muted);
+        border: 1px solid var(--border-light);
+    }
+    .mp-empty { color: var(--text-muted); font-size: 0.85rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mp-hero">
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16v16H4z"/><path d="M22 7l-10 7L2 7"/>
+        </svg>
+        Парсер почты
+    </h1>
+    <p>
+        Подключите свой ящик (Яндекс, Mail.ru, Gmail или любой IMAP) и найдите письмо по смыслу —
+        даже если номер забыт. Парсер смотрит тему, текст и содержимое PDF / DOCX / RTF / TXT.
+        Пароль хранится только у вас, в зашифрованном виде.
+    </p>
+</div>
+
+{% if error %}
+<div class="mp-alert mp-alert-error">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="mp-alert mp-alert-ok">{{ success }}</div>
+{% endif %}
+
+<div class="mp-grid">
+    <section class="mp-card">
+        <div class="mp-card-h">IMAP-ящик</div>
+        <div class="mp-card-b">
+            <form method="post" action="/mail-parser/settings" class="mp-form" id="mp-settings-form">
+                <div class="mp-row">
+                    <label for="provider">Провайдер</label>
+                    <select id="provider" name="provider">
+                        {% for key, meta in providers.items() %}
+                        <option value="{{ key }}"
+                            {% if account and account.provider == key %}selected
+                            {% elif not account and key == 'yandex' %}selected{% endif %}>
+                            {{ meta.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="mp-hint" id="provider-hint">
+                        {% if account %}
+                            {{ providers[account.provider].hint if account.provider in providers else providers.custom.hint }}
+                        {% else %}
+                            {{ providers.yandex.hint }}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="mp-row">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required
+                           value="{{ account.email if account else '' }}"
+                           placeholder="name@yandex.ru" autocomplete="username">
+                </div>
+
+                <div class="mp-row">
+                    <label for="password">Пароль приложения</label>
+                    <input type="password" id="password" name="password"
+                           placeholder="{% if account %}Оставьте пустым, чтобы не менять{% else %}Пароль приложения IMAP{% endif %}"
+                           autocomplete="new-password">
+                    <p class="mp-hint">Не обычный пароль от почты — именно пароль приложения / IMAP.</p>
+                </div>
+
+                <div class="mp-inline">
+                    <div class="mp-row">
+                        <label for="imap_host">IMAP-хост</label>
+                        <input type="text" id="imap_host" name="imap_host"
+                               value="{{ account.imap_host if account else 'imap.yandex.ru' }}"
+                               placeholder="imap.yandex.ru">
+                    </div>
+                    <div class="mp-row">
+                        <label for="imap_port">Порт</label>
+                        <input type="number" id="imap_port" name="imap_port" min="1" max="65535"
+                               value="{{ account.imap_port if account else 993 }}">
+                    </div>
+                </div>
+
+                <div class="mp-inline">
+                    <div class="mp-row">
+                        <label for="folder">Папка</label>
+                        <input type="text" id="folder" name="folder"
+                               value="{{ account.folder if account else 'INBOX' }}">
+                    </div>
+                    <div class="mp-row">
+                        <label for="use_ssl">SSL/TLS</label>
+                        <select id="use_ssl" name="use_ssl">
+                            <option value="1" {% if not account or account.use_ssl %}selected{% endif %}>Да</option>
+                            <option value="0" {% if account and not account.use_ssl %}selected{% endif %}>Нет</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mp-actions">
+                    <button type="submit" class="mp-btn mp-btn-primary">Сохранить</button>
+                    <button type="submit" class="mp-btn" formaction="/mail-parser/test">Проверить связь</button>
+                    {% if account %}
+                    <button type="submit" class="mp-btn mp-btn-danger" formaction="/mail-parser/clear-cache"
+                            onclick="return confirm('Очистить кэш распарсенных писем?');">
+                        Очистить кэш
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if account and account.last_checked_at %}
+                <p class="mp-hint">Последняя проверка: {{ account.last_checked_at.strftime('%d.%m.%Y %H:%M') }} UTC</p>
+                {% endif %}
+            </form>
+        </div>
+    </section>
+
+    <section class="mp-card">
+        <div class="mp-card-h">Поиск по смыслу</div>
+        <div class="mp-card-b">
+            <form method="post" action="/mail-parser/search" class="mp-form">
+                <div class="mp-row">
+                    <label for="query">Что ищем</label>
+                    <textarea id="query" name="query" required
+                              placeholder="Например: про ремонт школы / бюджет / ответ из министерства…">{{ query }}</textarea>
+                </div>
+                <div class="mp-inline">
+                    <div class="mp-row">
+                        <label for="days">Период, дней</label>
+                        <input type="number" id="days" name="days" min="1" max="365" value="{{ days }}">
+                    </div>
+                    <div class="mp-row">
+                        <label for="max_messages">Макс. писем</label>
+                        <input type="number" id="max_messages" name="max_messages" min="10" max="300" value="{{ max_messages }}">
+                    </div>
+                </div>
+                <p class="mp-hint">Чем больше период и лимит — тем дольше первый проход. Повторный поиск обычно быстрее: письма уже в кэше.</p>
+                <div class="mp-actions">
+                    <button type="submit" class="mp-btn mp-btn-primary" {% if not account %}disabled title="Сначала сохраните IMAP"{% endif %}>
+                        Найти в почте
+                    </button>
+                </div>
+            </form>
+
+            {% if search_result %}
+            <hr style="border:0;border-top:1px solid var(--border-light);margin:1.25rem 0;">
+            <p class="mp-result-msg">{{ search_result.message }}</p>
+
+            {% if search_result.exact %}
+            <h2 style="font-size:0.95rem;margin:0 0 0.75rem;">Подходящие</h2>
+            {% for hit in search_result.exact %}
+            <article class="mp-hit">
+                <div class="mp-hit-top">
+                    <h3>{{ hit.subject }}</h3>
+                    <span class="mp-score">{{ (hit.score * 100)|int }}%</span>
+                </div>
+                <div class="mp-meta">
+                    {{ hit.from_addr }}
+                    {% if hit.sent_at %} · {{ hit.sent_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+                </div>
+                {% if hit.snippet %}<div class="mp-snippet">{{ hit.snippet }}</div>{% endif %}
+                <div class="mp-tags">
+                    {% for s in hit.sources %}<span class="mp-tag">{{ s }}</span>{% endfor %}
+                    {% for n in hit.attachment_names[:4] %}<span class="mp-tag">{{ n }}</span>{% endfor %}
+                </div>
+            </article>
+            {% endfor %}
+            {% endif %}
+
+            {% if search_result.close and not search_result.exact %}
+            <h2 style="font-size:0.95rem;margin:0 0 0.75rem;">Ближайшие варианты</h2>
+            {% for hit in search_result.close %}
+            <article class="mp-hit">
+                <div class="mp-hit-top">
+                    <h3>{{ hit.subject }}</h3>
+                    <span class="mp-score">{{ (hit.score * 100)|int }}%</span>
+                </div>
+                <div class="mp-meta">
+                    {{ hit.from_addr }}
+                    {% if hit.sent_at %} · {{ hit.sent_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+                </div>
+                {% if hit.snippet %}<div class="mp-snippet">{{ hit.snippet }}</div>{% endif %}
+                <div class="mp-tags">
+                    {% for s in hit.sources %}<span class="mp-tag">{{ s }}</span>{% endfor %}
+                    {% for n in hit.attachment_names[:4] %}<span class="mp-tag">{{ n }}</span>{% endfor %}
+                </div>
+            </article>
+            {% endfor %}
+            {% elif search_result.close and search_result.exact %}
+            <h2 style="font-size:0.95rem;margin:1rem 0 0.75rem;">Также похоже</h2>
+            {% for hit in search_result.close[:5] %}
+            <article class="mp-hit">
+                <div class="mp-hit-top">
+                    <h3>{{ hit.subject }}</h3>
+                    <span class="mp-score">{{ (hit.score * 100)|int }}%</span>
+                </div>
+                <div class="mp-meta">{{ hit.from_addr }}{% if hit.sent_at %} · {{ hit.sent_at.strftime('%d.%m.%Y') }}{% endif %}</div>
+                {% if hit.snippet %}<div class="mp-snippet">{{ hit.snippet }}</div>{% endif %}
+            </article>
+            {% endfor %}
+            {% endif %}
+
+            {% if not search_result.exact and not search_result.close %}
+            <p class="mp-empty">Ничего не найдено. Попробуйте другие слова или увеличьте период.</p>
+            {% endif %}
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    const presets = {{ providers | tojson }};
+    const provider = document.getElementById('provider');
+    const host = document.getElementById('imap_host');
+    const port = document.getElementById('imap_port');
+    const hint = document.getElementById('provider-hint');
+    if (!provider) return;
+    provider.addEventListener('change', () => {
+        const meta = presets[provider.value] || presets.custom;
+        if (meta.host) host.value = meta.host;
+        if (meta.port) port.value = meta.port;
+        if (hint) hint.textContent = meta.hint || '';
+    });
+})();
+</script>
+{% endblock %}

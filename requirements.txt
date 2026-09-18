@@ -34,6 +34,8 @@ pyasn1==0.6.1
 pycparser==2.23
 pydantic==2.12.5
 pydantic_core==2.41.5
+pypdf==6.1.1
+python-docx==1.2.0
 python-dotenv==1.2.1
 python-jose==3.5.0
 python-multipart==0.0.21
@@ -41,6 +43,7 @@ rsa==4.9.1
 six==1.17.0
 SQLAlchemy==2.0.45
 starlette==0.50.0
+striprtf==0.0.26
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.40.0

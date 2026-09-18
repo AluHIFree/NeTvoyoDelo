@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from app.scheduler import start_scheduler, stop_scheduler
 from app.database import engine, get_db, Base
 from app import models
-from app.routers import auth, correspondences, admin, notifications, flows, requests, profile, updates
+from app.routers import auth, correspondences, admin, notifications, flows, requests, profile, updates, mail_parser
 from app.auth import get_current_user, get_current_active_user
 from app.migrate import run_migrations
 from app.config_env import load_project_env
@@ -61,6 +61,7 @@ app.include_router(flows.router)
 app.include_router(requests.router)
 app.include_router(profile.router)
 app.include_router(updates.router)
+app.include_router(mail_parser.router)
 
 
 @app.on_event("startup")
